@@ -116,7 +116,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     child: Container(
                       width: 100,
                       decoration: BoxDecoration(
-                        color: showMap ? DugColors.green : DugColors.grey300,
+                        color: showMap ? DugColors.green : DugColors.greyInactive,
                         borderRadius: BorderRadius.circular(context.radius.xxxl),
                         boxShadow: <BoxShadow>[
                           BoxShadow(
@@ -136,7 +136,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           width: 85,
                           borderRadius: 30.0,
                           showOnOff: true,
-                          inactiveColor: DugColors.grey300,
+                          inactiveColor: DugColors.greyInactive,
                           activeColor: DugColors.green,
                           activeTextColor: DugColors.white,
                           inactiveTextColor: DugColors.white,

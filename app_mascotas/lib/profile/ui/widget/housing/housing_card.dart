@@ -16,7 +16,7 @@ class HousingCard extends StatelessWidget {
       child: Container(
         decoration: BoxDecoration(
           borderRadius: BorderRadius.all(
-            Radius.circular(context.radius.lg),
+             Radius.circular(context.radius.xxxl),
           ),
           color: DugColors.white,
           border: Border.all(color: DugColors.greyTextCard),

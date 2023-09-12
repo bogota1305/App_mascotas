@@ -57,7 +57,7 @@ class _PrincipalScreenState extends State<PrincipalScreen> {
         preferredSize: Size.fromHeight(120),
         child: AppBar(
           title: AppBarDug(
-            HomeScreen: true,
+            homeScreen: true,
           ),
           shape: ShapeBorder.lerp(
             RoundedRectangleBorder(
@@ -106,7 +106,7 @@ class _PrincipalScreenState extends State<PrincipalScreen> {
               color: DugColors.blue,
             ),
           ),
-          BottomNavigationBarItem(
+          /*BottomNavigationBarItem(
             icon: Icon(
               Icons.pets,
               size: 35,
@@ -118,7 +118,7 @@ class _PrincipalScreenState extends State<PrincipalScreen> {
               color: DugColors.blue,
             ),
           ),
-          /*BottomNavigationBarItem(
+          BottomNavigationBarItem(
             icon: Icon(
               Icons.message,
               size: 35,
@@ -129,7 +129,7 @@ class _PrincipalScreenState extends State<PrincipalScreen> {
               size: 35,
               color: DugColors.blue,
             ),
-          ),
+          ),*/
           BottomNavigationBarItem(
             icon: Icon(
               Icons.settings,
@@ -141,7 +141,7 @@ class _PrincipalScreenState extends State<PrincipalScreen> {
               size: 35,
               color: DugColors.blue,
             ),
-          ),*/
+          ),
         ],
       ),
     );

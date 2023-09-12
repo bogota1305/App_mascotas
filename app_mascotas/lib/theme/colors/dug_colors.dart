@@ -17,9 +17,7 @@ class DugColors {
   static const white = Color.fromRGBO(255, 255, 255, 1);
   static const black = Color.fromRGBO(0, 0, 0, 1);
 
-  static const grey50 = Color.fromARGB(255, 250, 250, 250);
-  static const grey300 = Color.fromARGB(255, 224, 224, 224);
-  static const grey350 = Color.fromARGB(255, 214, 214, 214);
+  static const greyInactive = Color.fromARGB(255, 224, 224, 224);
   static const greyCard = Color.fromARGB(255, 189, 189, 189);
   static const greyBackground = Color.fromRGBO(228, 229, 229, 1);
   static const greyTextCard = Color.fromRGBO(86, 86, 86, 1);

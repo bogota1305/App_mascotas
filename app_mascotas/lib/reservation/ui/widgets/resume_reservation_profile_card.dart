@@ -4,8 +4,8 @@ import 'package:app_mascotas/theme/colors/dug_colors.dart';
 import 'package:app_mascotas/theme/text/text_size.dart';
 import 'package:flutter/material.dart';
 
-class HosingProfileCard extends StatelessWidget {
-  const HosingProfileCard({
+class ResumeReservationProfileCard extends StatelessWidget {
+  const ResumeReservationProfileCard({
     super.key,
   });
 
@@ -35,9 +35,12 @@ class HosingProfileCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Container(
-                color: DugColors.blue,
-                height: 175,
-                width: 125,
+                decoration: BoxDecoration(
+                  color: DugColors.blue,
+                  shape: BoxShape.circle
+                ),
+                width: 100,
+                height: 100,
               ),
               SizedBox(width: 15,),
               Column(
@@ -59,7 +62,23 @@ class HosingProfileCard extends StatelessWidget {
                     ],
                   ),
                   SizedBox(height: 15,),
-                  Text('Descripción')
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Icon(Icons.location_on, color: DugColors.blue),
+                      SizedBox(width: 5,),
+                      Text('Carrera 1 E #19a - 70'),
+                    ],
+                  ),
+                  SizedBox(height: 15,),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Icon(Icons.pets, color: DugColors.blue,),
+                      SizedBox(width: 5,),
+                      Text('2 Mascotas en casa'),
+                    ],
+                  ),
                 ],
               )
             ],

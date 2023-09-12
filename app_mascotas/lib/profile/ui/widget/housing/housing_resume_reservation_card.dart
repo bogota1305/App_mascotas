@@ -1,5 +1,6 @@
 import 'package:app_mascotas/extensions/dimension_extension.dart';
 import 'package:app_mascotas/extensions/radius_extension.dart';
+import 'package:app_mascotas/reservation/ui/screens/resume_reservation_screen.dart';
 import 'package:app_mascotas/theme/colors/dug_colors.dart';
 import 'package:app_mascotas/theme/text/text_size.dart';
 import 'package:flutter/material.dart';
@@ -75,6 +76,7 @@ class HousingResumeReservationCard extends StatelessWidget {
             ),
             Spacer(),
             InkWell(
+            onTap: () =>  Navigator.push(context, MaterialPageRoute(builder: (context) => ResumeReservationScreen())),
               child: Container(
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.all(

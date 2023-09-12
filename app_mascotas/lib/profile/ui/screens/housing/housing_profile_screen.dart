@@ -14,7 +14,29 @@ class HousingProfileScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: AppBarDug(HomeScreen: false,),
+        title: AppBarDug(
+          homeScreen: false,
+          barContent: Row(
+            children: [
+              Text(
+                'Perfil del cuidador',
+                style: TextStyle(
+                  fontSize: context.text.size.md,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              Spacer(), 
+              IconButton(
+                onPressed: () {}, 
+                icon: Icon(Icons.favorite, color: DugColors.white),
+              ),
+              IconButton(
+                onPressed: () {}, 
+                icon: Icon(Icons.share, color: DugColors.white),
+              )
+            ],
+          ),
+        ),
         backgroundColor: DugColors.blue,
       ),
       body: Stack(
@@ -22,32 +44,35 @@ class HousingProfileScreen extends StatelessWidget {
           SingleChildScrollView(
             child: Column(
               children: [
-                CarouselSlider(
-                  items: [
-                    Image.network(
-                        'https://pics.nuroa.com/casa_en_venta_en_bogota_bosque_de_pinos_4300006692099552305.jpg'),
-                    Image.network(
-                        'https://pics.nuroa.com/casa_en_venta_en_bogota_bosque_de_pinos_4300006692099552305.jpg'),
-                    Image.network(
-                        'https://pics.nuroa.com/casa_en_venta_en_bogota_bosque_de_pinos_4300006692099552305.jpg'),
-                    Image.network(
-                        'https://pics.nuroa.com/casa_en_venta_en_bogota_bosque_de_pinos_4300006692099552305.jpg'),
-                  ].map((image) {
-                    return Container(
-                      color: DugColors.black,
-                      height: 50,
-                      child: image,
-                    );
-                  }).toList(),
-                  options: CarouselOptions(
-                    aspectRatio: 1.3,
-                    enlargeCenterPage: true,
-                    autoPlay: true,
-                    autoPlayInterval: Duration(seconds: 8),
-                    viewportFraction: 1,
-                    onPageChanged: (index, reason) {
-                      // Acción cuando se cambia la página del carrusel
-                    },
+                SizedBox(
+                  height: 200,
+                  child: CarouselSlider(
+                    items: [
+                      Image.network(
+                          'https://pics.nuroa.com/casa_en_venta_en_bogota_bosque_de_pinos_4300006692099552305.jpg'),
+                      Image.network(
+                          'https://pics.nuroa.com/casa_en_venta_en_bogota_bosque_de_pinos_4300006692099552305.jpg'),
+                      Image.network(
+                          'https://pics.nuroa.com/casa_en_venta_en_bogota_bosque_de_pinos_4300006692099552305.jpg'),
+                      Image.network(
+                          'https://pics.nuroa.com/casa_en_venta_en_bogota_bosque_de_pinos_4300006692099552305.jpg'),
+                    ].map((image) {
+                      return Container(
+                        color: DugColors.black,
+                        height: 50,
+                        child: image,
+                      );
+                    }).toList(),
+                    options: CarouselOptions(
+                      aspectRatio: 1.3,
+                      enlargeCenterPage: true,
+                      autoPlay: true,
+                      autoPlayInterval: Duration(seconds: 8),
+                      viewportFraction: 1,
+                      onPageChanged: (index, reason) {
+                        // Acción cuando se cambia la página del carrusel
+                      },
+                    ),
                   ),
                 ),
                 SizedBox(height: context.spacing.md),
