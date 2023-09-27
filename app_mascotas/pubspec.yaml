@@ -69,6 +69,7 @@ flutter:
   assets:  
     - assets/images/home/image_example.png  
     - assets/images/logo/logo_Dug.png
+    - assets/images/login/start_dogs.png
 
   fonts:
     - family: Roboto

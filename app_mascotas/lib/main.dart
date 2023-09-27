@@ -15,7 +15,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       home: BlocProvider(
         create: (context) => NavigationBloc(),
-        child: LogoScreen(isLogged: true,),
+        child: LogoScreen(isLogged: false,),
       ),
     );
   }

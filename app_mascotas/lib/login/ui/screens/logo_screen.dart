@@ -1,5 +1,5 @@
 import 'package:app_mascotas/home/ui/screens/principal_screen.dart';
-import 'package:app_mascotas/profile/ui/screens/guest/guest_profile_screen.dart';
+import 'package:app_mascotas/login/ui/screens/principal_functions_screen.dart';
 import 'package:app_mascotas/theme/colors/dug_colors.dart';
 import 'package:flutter/material.dart';
 
@@ -22,7 +22,7 @@ class _LogoScreenState extends State<LogoScreen> {
     Future.delayed(Duration(seconds: 5), () {
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(
-          builder: (context) => widget.isLogged ? PrincipalScreen() : GuestProfileScreen(), // La siguiente pantalla
+          builder: (context) => widget.isLogged ? PrincipalScreen() : PrincipalFuctionsScreen(), // La siguiente pantalla
         ),
       );
     });
