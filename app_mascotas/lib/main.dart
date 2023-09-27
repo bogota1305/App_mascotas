@@ -1,4 +1,5 @@
 import 'package:app_mascotas/home/ui/screens/principal_screen.dart';
+import 'package:app_mascotas/login/ui/screens/logo_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -14,7 +15,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       home: BlocProvider(
         create: (context) => NavigationBloc(),
-        child: PrincipalScreen(),
+        child: LogoScreen(isLogged: true,),
       ),
     );
   }

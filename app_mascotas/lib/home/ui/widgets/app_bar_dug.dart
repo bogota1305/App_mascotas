@@ -1,5 +1,6 @@
 import 'package:app_mascotas/home/controller/map_controller.dart';
 import 'package:app_mascotas/home/model/map_model.dart';
+import 'package:app_mascotas/profile/ui/screens/guest/guest_profile_screen.dart';
 import 'package:app_mascotas/theme/colors/dug_colors.dart';
 import 'package:app_mascotas/theme/text/text_size.dart';
 import 'package:flutter/material.dart';
@@ -129,7 +130,7 @@ class _AppBarDugState extends State<AppBarDug> {
                     width: 1,
                   ),
                 ),
-                width: 130,
+                width: 140,
                 child: Padding(
                   padding: const EdgeInsets.all(15),
                   child: Center(
@@ -149,7 +150,8 @@ class _AppBarDugState extends State<AppBarDug> {
           Spacer(),
           InkWell(
             onTap: () {
-              
+              Navigator.push(context,
+                MaterialPageRoute(builder: (context) => GuestProfileScreen()));
             },
             child: Column(
               children: [
