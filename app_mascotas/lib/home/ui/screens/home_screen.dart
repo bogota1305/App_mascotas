@@ -5,6 +5,8 @@ import 'package:app_mascotas/profile/ui/widget/housing/housing_or_request_card.d
 import 'package:app_mascotas/theme/colors/dug_colors.dart';
 import 'package:app_mascotas/theme/text/text_size.dart';
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:flutter_switch/flutter_switch.dart';
 
@@ -16,11 +18,12 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   bool showMap = false;
+  LatLng currentLocation = LatLng(0,0);
 
   @override
   void initState() {
     super.initState();
-    requestLocationPermission(); // Solicitar permiso al iniciar la pantalla
+    //requestLocationPermission(); // Solicitar permiso al iniciar la pantalla
   }
 
   // Función para solicitar permiso de ubicación
@@ -71,42 +74,51 @@ class _HomeScreenState extends State<HomeScreen> {
                           name: 'Item 1',
                           image: 'https://media.istockphoto.com/id/1200677760/es/foto/retrato-de-apuesto-joven-sonriente-con-los-brazos-cruzados.jpg?b=1&s=612x612&w=0&k=20&c=3OB0hSUgwzlzUh8ek-6Z2z_XwFKnRE7IOHb1oWvoMZ4=',
                           housing: true,
-                          color: DugColors.purple,
+                          color: DugColors.blue.withOpacity(0.6),
+                          favorite: false,
                         ),
                         HousingOrRequestCard(
                           name: 'Item 1',
                           image: 'https://media.istockphoto.com/id/1200677760/es/foto/retrato-de-apuesto-joven-sonriente-con-los-brazos-cruzados.jpg?b=1&s=612x612&w=0&k=20&c=3OB0hSUgwzlzUh8ek-6Z2z_XwFKnRE7IOHb1oWvoMZ4=',
                           housing: true,
-                          color: DugColors.purple,
+                          color: DugColors.blue.withOpacity(0.6),
+                          favorite: true,
                         ),
                         HousingOrRequestCard(
                           name: 'Item 1',
                           image: 'https://media.istockphoto.com/id/1200677760/es/foto/retrato-de-apuesto-joven-sonriente-con-los-brazos-cruzados.jpg?b=1&s=612x612&w=0&k=20&c=3OB0hSUgwzlzUh8ek-6Z2z_XwFKnRE7IOHb1oWvoMZ4=',
                           housing: true,
-                          color: DugColors.purple,
+                          color: DugColors.blue.withOpacity(0.6),
+                          favorite: false,
                         ),
                         HousingOrRequestCard(
                           name: 'Item 1',
                           image: 'https://media.istockphoto.com/id/1200677760/es/foto/retrato-de-apuesto-joven-sonriente-con-los-brazos-cruzados.jpg?b=1&s=612x612&w=0&k=20&c=3OB0hSUgwzlzUh8ek-6Z2z_XwFKnRE7IOHb1oWvoMZ4=',
                           housing: true,
-                          color: DugColors.purple,
+                          color: DugColors.blue.withOpacity(0.6),
+                          favorite: false,
                         ),
                         HousingOrRequestCard(
                           name: 'Item 1',
                           image: 'https://media.istockphoto.com/id/1200677760/es/foto/retrato-de-apuesto-joven-sonriente-con-los-brazos-cruzados.jpg?b=1&s=612x612&w=0&k=20&c=3OB0hSUgwzlzUh8ek-6Z2z_XwFKnRE7IOHb1oWvoMZ4=',
                           housing: true,
-                          color: DugColors.purple,
+                          color: DugColors.blue.withOpacity(0.6),
+                          favorite: false,
                         ),
                         HousingOrRequestCard(
                           name: 'Item 1',
                           image: 'https://media.istockphoto.com/id/1200677760/es/foto/retrato-de-apuesto-joven-sonriente-con-los-brazos-cruzados.jpg?b=1&s=612x612&w=0&k=20&c=3OB0hSUgwzlzUh8ek-6Z2z_XwFKnRE7IOHb1oWvoMZ4=',
                           housing: true,
-                          color: DugColors.purple,
+                          color: DugColors.blue.withOpacity(0.6),
+                          favorite: false,
                         ),
                       ],
                     ),
                   ),
-                  MapHome(),
+                  Visibility(
+                    visible: currentLocation != LatLng(0,0),
+                    child: MapHome(currentLocation: currentLocation,)
+                  ),
                 ],
               ),
               Column(
@@ -141,6 +153,9 @@ class _HomeScreenState extends State<HomeScreen> {
                           activeTextColor: DugColors.white,
                           inactiveTextColor: DugColors.white,
                           onToggle: (val) {
+                            if(!showMap){
+                              _getCurrentLocation();
+                            }
                             setState(() {
                               showMap = val;
                             });
@@ -158,4 +173,29 @@ class _HomeScreenState extends State<HomeScreen> {
       ],
     );
   }
+
+  void _getCurrentLocation() async {
+    bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      return Future.error('Servicio de ubicación desactivado');
+    }
+
+    LocationPermission permission = await Geolocator.checkPermission();
+    if(permission == LocationPermission.denied){
+      permission = await Geolocator.requestPermission();
+      if(permission == LocationPermission.denied){
+        return Future.error('Permiso de ubicación denegado');
+      }
+    }
+    if (permission == LocationPermission.deniedForever) {
+      return Future.error(
+          'Permiso de ubicación denegado permanentemente, no se puede solicitar');
+    }
+    Position position = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
+
+    setState(() {
+      currentLocation = LatLng(position.latitude, position.longitude);
+    });
+  }
 }
+
