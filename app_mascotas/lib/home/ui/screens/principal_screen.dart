@@ -1,11 +1,12 @@
+import 'package:app_mascotas/extensions/dimension_extension.dart';
 import 'package:app_mascotas/extensions/radius_extension.dart';
 import 'package:app_mascotas/home/ui/screens/favorites_screen.dart';
 import 'package:app_mascotas/home/ui/screens/home_screen.dart';
-import 'package:app_mascotas/home/ui/screens/message_screen.dart';
-import 'package:app_mascotas/home/ui/screens/pets_screen.dart';
-import 'package:app_mascotas/home/ui/screens/guest_profile_screen.dart';
+import 'package:app_mascotas/messages/ui/screens/message_screen.dart';
 import 'package:app_mascotas/home/ui/widgets/app_bar_dug.dart';
+import 'package:app_mascotas/profile/ui/screens/guest/guest_profile_screen.dart';
 import 'package:app_mascotas/theme/colors/dug_colors.dart';
+import 'package:app_mascotas/theme/text/text_size.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -20,12 +21,8 @@ class NavigationBloc extends Bloc<NavigationEvent, int> {
       yield 0;
     } else if (event == NavigationEvent.favorite) {
       yield 1;
-    } else if (event == NavigationEvent.pet) {
-      yield 2;
     } else if (event == NavigationEvent.message) {
-      yield 3;
-    } else if (event == NavigationEvent.profile) {
-      yield 4;
+      yield 2;
     }
   }
 }
@@ -40,9 +37,7 @@ class _PrincipalScreenState extends State<PrincipalScreen> {
   final List<Widget> _pages = [
     HomeScreen(),
     FavoritesScreen(),
-    PetScreen(),
     MessageScreen(),
-    GuestProfileScreen(),
   ];
 
   @override
@@ -54,10 +49,57 @@ class _PrincipalScreenState extends State<PrincipalScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: PreferredSize(
-        preferredSize: Size.fromHeight(120),
+        preferredSize: Size.fromHeight(_currentIndex == 0 ? 120 : 80),
         child: AppBar(
+          automaticallyImplyLeading: false,
           title: AppBarDug(
-            homeScreen: true,
+            homeScreen: _currentIndex == 0,
+            barContent: _currentIndex != 0
+                ? Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Text(
+                        _currentIndex == 1 ? 'Favoritos' : 'Mensajes',
+                        style: TextStyle(
+                          fontSize: context.text.size.lg,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      SizedBox(
+                        width: context.spacing.xxxs,
+                      ),
+                      Icon(_currentIndex == 1 ? Icons.favorite : Icons.message),
+                      Spacer(),
+          InkWell(
+            onTap: () {
+              Navigator.push(context,
+                MaterialPageRoute(builder: (context) => GuestProfileScreen()));
+            },
+            child: Row(
+              children: [
+                Text(
+                  'Perfil',
+                  style: TextStyle(
+                    fontSize: context.text.size.xs,
+                    fontWeight: FontWeight.bold,
+                    color: DugColors.white,
+                  ),
+                ),
+                SizedBox(
+                  width: 12,
+                ),
+                CircleAvatar(
+                  backgroundImage: NetworkImage(
+                    'https://media.istockphoto.com/id/1200677760/es/foto/retrato-de-apuesto-joven-sonriente-con-los-brazos-cruzados.jpg?b=1&s=612x612&w=0&k=20&c=3OB0hSUgwzlzUh8ek-6Z2z_XwFKnRE7IOHb1oWvoMZ4=',
+                  ),
+                  radius: 30,
+                ),
+              ],
+            ),
+          ),
+                    ],
+                  )
+                : null,
           ),
           shape: ShapeBorder.lerp(
             RoundedRectangleBorder(
@@ -106,18 +148,6 @@ class _PrincipalScreenState extends State<PrincipalScreen> {
               color: DugColors.blue,
             ),
           ),
-          /*BottomNavigationBarItem(
-            icon: Icon(
-              Icons.pets,
-              size: 35,
-            ),
-            label: 'Mascotas',
-            activeIcon: Icon(
-              Icons.pets,
-              size: 35,
-              color: DugColors.blue,
-            ),
-          ),
           BottomNavigationBarItem(
             icon: Icon(
               Icons.message,
@@ -126,18 +156,6 @@ class _PrincipalScreenState extends State<PrincipalScreen> {
             label: 'Mensages',
             activeIcon: Icon(
               Icons.message,
-              size: 35,
-              color: DugColors.blue,
-            ),
-          ),*/
-          BottomNavigationBarItem(
-            icon: Icon(
-              Icons.settings,
-              size: 35,
-            ),
-            label: 'Configuración',
-            activeIcon: Icon(
-              Icons.settings,
               size: 35,
               color: DugColors.blue,
             ),

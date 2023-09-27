@@ -10,13 +10,14 @@ class HousingOrRequestCard extends StatelessWidget {
   final String image;
   final bool housing;
   final Color color;
+  final bool favorite;
 
   const HousingOrRequestCard({
     super.key,
     required this.name,
     required this.image,
     required this.housing,
-    required this.color,
+    required this.color, required this.favorite,
   });
 
   @override
@@ -34,7 +35,7 @@ class HousingOrRequestCard extends StatelessWidget {
               borderRadius: BorderRadius.all(
                 Radius.circular(context.radius.lg),
               ),
-              color: Color.fromARGB(255, 231, 231, 231),
+              color: favorite ? DugColors.orange : color,
               boxShadow: [
                 BoxShadow(
                   color: Colors.grey.withOpacity(0.5), // Color de la sombra
@@ -57,7 +58,6 @@ class HousingOrRequestCard extends StatelessWidget {
                           children: [
                             Container(
                               decoration: BoxDecoration(
-                                color: DugColors.blue,
                                 shape: BoxShape.circle
                               ),
                               child: Padding(
@@ -74,7 +74,6 @@ class HousingOrRequestCard extends StatelessWidget {
                             Container(
                               decoration: BoxDecoration(
                                 borderRadius: BorderRadius.all(Radius.circular(context.radius.sm)),
-                                color: DugColors.blue,
                               ),
                               child: Padding(
                                 padding: const EdgeInsets.all(8.0),
@@ -91,12 +90,13 @@ class HousingOrRequestCard extends StatelessWidget {
                         ),
                       ),
                     ),
+                    Spacer(),
                     Container(
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.all(
                           Radius.circular(context.radius.md),
                         ),
-                        border: Border.all(color: DugColors.greyCard, width: 2),
+                        border: Border.all(color: favorite ? DugColors.orange : color, width: 2),
                         color: DugColors.white,
                       ),
                       child: Padding(
@@ -186,6 +186,16 @@ class HousingOrRequestCard extends StatelessWidget {
                                   style: TextStyle(
                                     color: DugColors.greyTextCard,
                                     fontSize: context.text.size.xxs,
+                                  ),
+                                ),
+                                SizedBox(
+                                  width: context.spacing.xxxl,
+                                ),
+                                Visibility(
+                                  visible: favorite,
+                                  child: Icon(
+                                    Icons.favorite,
+                                    color: DugColors.orange
                                   ),
                                 ),
                               ],
