@@ -2,26 +2,30 @@ import 'package:app_mascotas/extensions/dimension_extension.dart';
 import 'package:app_mascotas/extensions/radius_extension.dart';
 import 'package:app_mascotas/home/ui/widgets/app_bar_dug.dart';
 import 'package:app_mascotas/profile/ui/screens/guest/payment_methods_screen.dart';
-import 'package:app_mascotas/reservation/ui/widgets/housing_tipe_card_content.dart';
-import 'package:app_mascotas/reservation/ui/widgets/payment_card_content.dart';
-import 'package:app_mascotas/reservation/ui/widgets/price_card_content.dart';
-import 'package:app_mascotas/reservation/ui/widgets/request_reservation_button.dart';
 import 'package:app_mascotas/reservation/ui/widgets/resume_reservation_card.dart';
-import 'package:app_mascotas/reservation/ui/widgets/resume_reservation_profile_card.dart';
 import 'package:app_mascotas/theme/colors/dug_colors.dart';
 import 'package:app_mascotas/theme/text/text_size.dart';
+import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
 
 class GuestProfileScreen extends StatefulWidget {
+  final bool ownProfile;
+  final int? numberOfpets;
+
+  const GuestProfileScreen({super.key, required this.ownProfile, this.numberOfpets});
+
   @override
   State<GuestProfileScreen> createState() => _GuestProfileScreenState();
 }
 
 class _GuestProfileScreenState extends State<GuestProfileScreen> {
   bool pet = false;
+  int actualPet = 1;
+  int numberOfpets = 1;
 
   @override
   Widget build(BuildContext context) {
+    numberOfpets = widget.numberOfpets ?? 1;
     return Scaffold(
       appBar: AppBar(
         title: AppBarDug(
@@ -52,24 +56,85 @@ class _GuestProfileScreenState extends State<GuestProfileScreen> {
                     },
                     child: ProfileCircleCard(
                       pet: pet,
-                      image:
-                          'https://media.istockphoto.com/id/1200677760/es/foto/retrato-de-apuesto-joven-sonriente-con-los-brazos-cruzados.jpg?b=1&s=612x612&w=0&k=20&c=3OB0hSUgwzlzUh8ek-6Z2z_XwFKnRE7IOHb1oWvoMZ4=',
+                      image: 'https://media.istockphoto.com/id/1200677760/es/foto/retrato-de-apuesto-joven-sonriente-con-los-brazos-cruzados.jpg?b=1&s=612x612&w=0&k=20&c=3OB0hSUgwzlzUh8ek-6Z2z_XwFKnRE7IOHb1oWvoMZ4=',
                       isUser: true,
                       name: 'Juan Diego',
                     ),
                   ),
-                  InkWell(
-                    onTap: () {
-                      pet = true;
-                      setState(() {});
-                    },
-                    child: ProfileCircleCard(
-                      pet: pet,
-                      image:
-                          'https://upload.wikimedia.org/wikipedia/commons/thumb/0/04/Labrador_Retriever_%281210559%29.jpg/1200px-Labrador_Retriever_%281210559%29.jpg',
-                      isUser: false,
-                      name: 'Max',
-                    ),
+                  Stack(
+                    children: [
+                      InkWell(
+                        onTap: () {
+                          pet = true;
+                          setState(() {});
+                        },
+                        child: ProfileCircleCard(
+                          pet: pet,
+                          image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/04/Labrador_Retriever_%281210559%29.jpg/1200px-Labrador_Retriever_%281210559%29.jpg',
+                          isUser: false,
+                          name: 'Max',
+                        ),
+                      ),
+                      Visibility(
+                        visible: numberOfpets > 1 && pet,
+                        child: InkWell(
+                          onTap: () {
+                            if (actualPet > 1) {
+                              actualPet--;
+                            } else {
+                              actualPet = numberOfpets;
+                            }
+                            setState(() {});
+                          },
+                          child: Padding(
+                            padding: const EdgeInsets.only(top: 155),
+                            child: Icon(Icons.arrow_back_ios_rounded, color: DugColors.green, size: 30,),
+                          ),
+                        ),
+                      ),
+                      Visibility(
+                        visible: numberOfpets > 1 && pet,
+                        child: InkWell(
+                          onTap: () {
+                            if (actualPet < numberOfpets) {
+                              actualPet++;
+                            } else {
+                              actualPet = 1;
+                            }
+                            setState(() {});
+                          },
+                          child: Padding(
+                            padding: const EdgeInsets.only(top: 155, left: 100),
+                            child: Icon(Icons.arrow_forward_ios_rounded, color: DugColors.green, size: 30,),
+                          ),
+                        ),
+                      ),
+                      Visibility(
+                        visible: numberOfpets > 1 && pet,
+                        child: Padding(
+                          padding: const EdgeInsets.only(left: 80),
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: DugColors.green,
+                              borderRadius: BorderRadius.all(
+                                Radius.circular(20.0),
+                              ),
+                            ),
+                            child: Padding(
+                              padding: EdgeInsets.all(10), 
+                              child: Text(
+                                '$actualPet/${numberOfpets.toString()}',
+                                style: TextStyle(
+                                  fontSize: context.text.size.xs,
+                                  fontWeight: FontWeight.bold,
+                                  color: DugColors.white,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -77,8 +142,12 @@ class _GuestProfileScreenState extends State<GuestProfileScreen> {
             SizedBox(height: context.spacing.md),
             Visibility(
               visible: !pet,
-              replacement: PetProfileContent(),
-              child: GuestProfileContent(),
+              replacement: PetProfileContent(
+                ownProfile: widget.ownProfile,
+              ),
+              child: GuestProfileContent(
+                ownProfile: widget.ownProfile,
+              ),
             ),
             SizedBox(height: context.spacing.md),
           ],
@@ -89,8 +158,11 @@ class _GuestProfileScreenState extends State<GuestProfileScreen> {
 }
 
 class GuestProfileContent extends StatelessWidget {
+  final bool ownProfile;
+
   const GuestProfileContent({
     super.key,
+    required this.ownProfile,
   });
 
   @override
@@ -105,28 +177,93 @@ class GuestProfileContent extends StatelessWidget {
         ),
         SizedBox(height: context.spacing.md),
         ResumeReservationCard(
-          child: GuestProfileLocationCardContent(),
+          child: PhotosCarousel(
+            image1: 'https://pics.nuroa.com/casa_en_venta_en_bogota_bosque_de_pinos_4300006692099552305.jpg',
+            image2: 'https://pics.nuroa.com/casa_en_venta_en_bogota_bosque_de_pinos_4300006692099552305.jpg',
+            image3: 'https://pics.nuroa.com/casa_en_venta_en_bogota_bosque_de_pinos_4300006692099552305.jpg',
+            image4: 'https://pics.nuroa.com/casa_en_venta_en_bogota_bosque_de_pinos_4300006692099552305.jpg'
+          ),
         ),
         SizedBox(height: context.spacing.md),
-        ResumeReservationCard(
-          child: GuestProfilePaymentCardContent(),
+        Visibility(
+          visible: ownProfile,
+          child: Column(
+            children: [
+              ResumeReservationCard(
+                child: GuestProfileLocationCardContent(),
+              ),
+              SizedBox(height: context.spacing.md),
+              ResumeReservationCard(
+                child: GuestProfilePaymentCardContent(),
+              ),
+              SizedBox(height: context.spacing.md),
+              ResumeReservationCard(
+                child: GuestProfileInfoCardContent(),
+              ),
+              SizedBox(height: context.spacing.md),
+            ],
+          ),
         ),
-        SizedBox(height: context.spacing.md),
         ResumeReservationCard(
-          child: GuestProfileInfoCardContent(),
-        ),
-        SizedBox(height: context.spacing.md),
-        ResumeReservationCard(
-          child: GuestProfileDescriptionCardContent(pet: false),
+          child: GuestProfileDescriptionCardContent(
+            pet: false,
+            ownProfile: ownProfile,
+          ),
         ),
       ],
     );
   }
 }
 
+class PhotosCarousel extends StatelessWidget {
+
+  final String image1;
+  final String image2;
+  final String image3;
+  final String image4;
+
+  const PhotosCarousel({
+    super.key, 
+    required this.image1, 
+    required this.image2,
+    required this.image3, 
+    required this.image4,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return CarouselSlider(
+      items: [
+        Image.network(image1),
+        Image.network(image2),
+        Image.network(image3),
+        Image.network(image4),
+      ].map((image) {
+        return Container(
+          height: 50,
+          child: image,
+        );
+      }).toList(),
+      options: CarouselOptions(
+        aspectRatio: 1.3,
+        enlargeCenterPage: true,
+        autoPlay: true,
+        autoPlayInterval: Duration(seconds: 8),
+        viewportFraction: 1,
+        onPageChanged: (index, reason) {
+          // Acción cuando se cambia la página del carrusel
+        },
+      ),
+    );
+  }
+}
+
 class PetProfileContent extends StatelessWidget {
+  final bool ownProfile;
+
   const PetProfileContent({
     super.key,
+    required this.ownProfile,
   });
 
   @override
@@ -141,11 +278,25 @@ class PetProfileContent extends StatelessWidget {
         ),
         SizedBox(height: context.spacing.md),
         ResumeReservationCard(
-          child: PetProfileInfoCardContent(),
+          child: PhotosCarousel(
+            image1: 'https://pics.nuroa.com/casa_en_venta_en_bogota_bosque_de_pinos_4300006692099552305.jpg',
+            image2: 'https://pics.nuroa.com/casa_en_venta_en_bogota_bosque_de_pinos_4300006692099552305.jpg',
+            image3: 'https://pics.nuroa.com/casa_en_venta_en_bogota_bosque_de_pinos_4300006692099552305.jpg',
+            image4: 'https://pics.nuroa.com/casa_en_venta_en_bogota_bosque_de_pinos_4300006692099552305.jpg'
+          ),
         ),
         SizedBox(height: context.spacing.md),
         ResumeReservationCard(
-          child: GuestProfileDescriptionCardContent(pet: true),
+          child: PetProfileInfoCardContent(
+            ownProfile: ownProfile,
+          ),
+        ),
+        SizedBox(height: context.spacing.md),
+        ResumeReservationCard(
+          child: GuestProfileDescriptionCardContent(
+            pet: true,
+            ownProfile: ownProfile,
+          ),
         ),
       ],
     );
@@ -445,9 +596,11 @@ class GuestProfilePaymentCardContent extends StatelessWidget {
             Spacer(),
             InkWell(
               onTap: () {
-              Navigator.push(context,
-                MaterialPageRoute(builder: (context) => PaymentMethodsScreen()));
-            },
+                Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => PaymentMethodsScreen()));
+              },
               child: Container(
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.all(
@@ -561,10 +714,12 @@ class GuestProfileInfoCardContent extends StatelessWidget {
 
 class GuestProfileDescriptionCardContent extends StatelessWidget {
   final bool pet;
+  final bool ownProfile;
 
   const GuestProfileDescriptionCardContent({
     super.key,
     required this.pet,
+    required this.ownProfile,
   });
 
   @override
@@ -582,22 +737,25 @@ class GuestProfileDescriptionCardContent extends StatelessWidget {
               ),
             ),
             Spacer(),
-            Container(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.all(
-                  Radius.circular(context.radius.lg),
+            Visibility(
+              visible: ownProfile,
+              child: Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.all(
+                    Radius.circular(context.radius.lg),
+                  ),
+                  color: pet ? DugColors.green : DugColors.blue,
                 ),
-                color: pet ? DugColors.green : DugColors.blue,
-              ),
-              child: Padding(
-                padding: EdgeInsets.symmetric(
-                    vertical: context.spacing.xxs,
-                    horizontal: context.spacing.sm),
-                child: Text(
-                  'Editar',
-                  style: TextStyle(
-                    color: DugColors.white,
-                    fontSize: context.text.size.xxs,
+                child: Padding(
+                  padding: EdgeInsets.symmetric(
+                      vertical: context.spacing.xxs,
+                      horizontal: context.spacing.sm),
+                  child: Text(
+                    'Editar',
+                    style: TextStyle(
+                      color: DugColors.white,
+                      fontSize: context.text.size.xxs,
+                    ),
                   ),
                 ),
               ),
@@ -615,8 +773,11 @@ class GuestProfileDescriptionCardContent extends StatelessWidget {
 }
 
 class PetProfileInfoCardContent extends StatelessWidget {
+  final bool ownProfile;
+
   const PetProfileInfoCardContent({
     super.key,
+    required this.ownProfile,
   });
 
   @override
@@ -634,22 +795,25 @@ class PetProfileInfoCardContent extends StatelessWidget {
               ),
             ),
             Spacer(),
-            Container(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.all(
-                  Radius.circular(context.radius.lg),
+            Visibility(
+              visible: ownProfile,
+              child: Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.all(
+                    Radius.circular(context.radius.lg),
+                  ),
+                  color: DugColors.green,
                 ),
-                color: DugColors.green,
-              ),
-              child: Padding(
-                padding: EdgeInsets.symmetric(
-                    vertical: context.spacing.xxs,
-                    horizontal: context.spacing.sm),
-                child: Text(
-                  'Editar',
-                  style: TextStyle(
-                    color: DugColors.white,
-                    fontSize: context.text.size.xxs,
+                child: Padding(
+                  padding: EdgeInsets.symmetric(
+                      vertical: context.spacing.xxs,
+                      horizontal: context.spacing.sm),
+                  child: Text(
+                    'Editar',
+                    style: TextStyle(
+                      color: DugColors.white,
+                      fontSize: context.text.size.xxs,
+                    ),
                   ),
                 ),
               ),
