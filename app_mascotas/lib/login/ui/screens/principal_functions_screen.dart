@@ -1,8 +1,10 @@
 import 'package:app_mascotas/extensions/dimension_extension.dart';
 import 'package:app_mascotas/extensions/radius_extension.dart';
 import 'package:app_mascotas/home/ui/screens/principal_screen.dart';
+import 'package:app_mascotas/login/ui/screens/selection_user_screen.dart';
 import 'package:app_mascotas/theme/colors/dug_colors.dart';
 import 'package:app_mascotas/theme/text/text_size.dart';
+import 'package:app_mascotas/widgets/buttons/principal_button.dart';
 import 'package:flutter/material.dart';
 
 class PrincipalFuctionsScreen extends StatelessWidget {
@@ -105,44 +107,15 @@ class PrincipalFuctionsScreen extends StatelessWidget {
                         SizedBox(
                           height: context.spacing.xxxl,
                         ),
-                        Padding(
-                          padding: EdgeInsets.symmetric(
-                              horizontal: context.spacing.xxl),
-                          child: ElevatedButton(
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: DugColors.blue,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(context
-                                    .radius
-                                    .xxxl), // Ajusta el valor según desees
-                              ),
+                        PrincipalButton(onPressed: () { 
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (context) =>
+                                  SelectionUserScreen(), // La siguiente pantalla
                             ),
-                            onPressed: () {
-                              Navigator.of(context).pushReplacement(
-                                MaterialPageRoute(
-                                  builder: (context) =>
-                                      PrincipalScreen(), // La siguiente pantalla
-                                ),
-                              );
-                            },
-                            child: Row(
-                              children: [
-                                Spacer(),
-                                Padding(
-                                  padding: EdgeInsets.symmetric(
-                                      vertical: context.spacing.xs),
-                                  child: Text(
-                                    'Empezar',
-                                    style: TextStyle(
-                                      fontSize: context.text.size.lg,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ),
-                                Spacer(),
-                              ],
-                            ),
-                          ),
+                          );
+                         }, 
+                         text: 'Empezar',
                         ),
                       ],
                     ),

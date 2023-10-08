@@ -4,7 +4,9 @@ import 'package:app_mascotas/profile/ui/screens/guest/guest_profile_screen.dart'
 import 'package:app_mascotas/theme/colors/dug_colors.dart';
 import 'package:app_mascotas/theme/text/text_size.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_date_range_picker/flutter_date_range_picker.dart';
 import 'package:flutter_switch/flutter_switch.dart';
+import 'package:time_range_picker/time_range_picker.dart';
 
 class AppBarDug extends StatefulWidget {
   final bool homeScreen;
@@ -21,9 +23,12 @@ class AppBarDug extends StatefulWidget {
 
 class _AppBarDugState extends State<AppBarDug> {
   final MapController mapController = MapController();
+  String selectedOption = 'Fecha';
+  String selectedRange = '';
 
   @override
   Widget build(BuildContext context) {
+    selectedRange = selectedRange == '' ? getDayRange() : selectedRange;
     return Visibility(
       visible: widget.homeScreen,
       replacement: widget.barContent ?? Container(),
@@ -101,13 +106,22 @@ class _AppBarDugState extends State<AppBarDug> {
                     Icons.arrow_drop_down,
                     color: Colors.white,
                   ),
-                  value: 'Fecha',
+                  value: selectedOption,
                   style: TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
                   ),
-                  dropdownColor: DugColors.blue,
-                  onChanged: (String? newValue) {},
+                  dropdownColor: Colors.blue,
+                  onChanged: (String? newValue) {
+                    setState(() {
+                      selectedOption = newValue!;
+                      if (newValue == 'Hora') {
+                        selectedRange = getHourRange();
+                      } else {
+                        selectedRange = getDayRange();
+                      }
+                    });
+                  },
                   items: <String>[
                     'Fecha',
                     'Hora',
@@ -121,25 +135,30 @@ class _AppBarDugState extends State<AppBarDug> {
               ),
               Container(
                 decoration: BoxDecoration(
-                  color: DugColors.white,
+                  color: Colors.white,
                   borderRadius: BorderRadius.all(
                     Radius.circular(20.0),
                   ),
                   border: Border.all(
-                    color: DugColors.white,
+                    color: Colors.white,
                     width: 1,
                   ),
                 ),
-                width: 140,
-                child: Padding(
-                  padding: const EdgeInsets.all(15),
-                  child: Center(
-                    child: Text(
-                      '05/09 - 06/09',
-                      style: TextStyle(
-                        fontSize: context.text.size.xs,
-                        fontWeight: FontWeight.bold,
-                        color: DugColors.blue,
+                width: 155,
+                child: InkWell(
+                  onTap: () {
+                    _selectDateOrTime();
+                  },
+                  child: Padding(
+                    padding: const EdgeInsets.all(15),
+                    child: Center(
+                      child: Text(
+                        selectedRange,
+                        style: TextStyle(
+                          fontSize: 14.0,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.blue,
+                        ),
                       ),
                     ),
                   ),
@@ -150,8 +169,12 @@ class _AppBarDugState extends State<AppBarDug> {
           Spacer(),
           InkWell(
             onTap: () {
-              Navigator.push(context,
-                MaterialPageRoute(builder: (context) => GuestProfileScreen()));
+              Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => GuestProfileScreen(
+                            ownProfile: true,
+                          )));
             },
             child: Column(
               children: [
@@ -182,4 +205,66 @@ class _AppBarDugState extends State<AppBarDug> {
       ),
     );
   }
+
+  Future<void> _selectDateOrTime() async {
+    if (selectedOption == 'Fecha') {
+      DateTimeRange? result = await showDateRangePicker(
+        context: context,
+        firstDate: DateTime(2022, 1, 1), // la fecha más temprana permitida
+        lastDate: DateTime(2030, 12, 31), // la fecha más reciente permitida
+        currentDate: DateTime.now(),
+        saveText: 'Listo',
+      );
+
+      if (result != null) {
+        setState(() {
+          selectedRange =
+              '${result.start.day.toString()}/${result.start.month.toString()} - ${result.end.day.toString()}/${result.end.month.toString()}';
+        });
+      }
+    } else if (selectedOption == 'Hora') {
+      final TimeRange result = await showTimeRangePicker(
+        context: context,
+        start: const TimeOfDay(hour: 8, minute: 0),
+        end: const TimeOfDay(hour: 20, minute: 0),
+        interval: const Duration(minutes: 15),
+        use24HourFormat: false,
+      );
+
+      if (result != null) {
+        String startMinutes = result.startTime.minute == 0 ? '00' : result.startTime.minute.toString();
+        String endMinutes = result.endTime.minute == 0 ? '00' : result.endTime.minute.toString();
+        setState(() {
+          selectedRange =
+              '${result.startTime.hour}:$startMinutes - ${result.endTime.hour}:$endMinutes';
+        });
+      }
+    }
+  }
+
+  String getHourRange() {
+    String minutes = DateTime.now().minute >= 0 && DateTime.now().minute < 10 ? '0${DateTime.now().minute.toString()}' : DateTime.now().minute.toString();
+    return DateTime.now().hour.toString() +
+      ':' + minutes + 
+      ' - ' + (DateTime.now().hour + 5).toString() +
+      ':' + minutes;
+  }
+
+  String getDayRange() {
+    String range = DateTime.now().day.toString() +
+    '/' +
+    DateTime.now().month.toString() +
+    ' - ';
+
+    if(DateTime.now().day == 30 || DateTime.now().day == 31 || (DateTime.now() == DateTime.february && DateTime.now().day == 28)) {
+      range = range + '1' +
+      '/' +
+      (DateTime.now().month + 1).toString();
+    } else {
+      range = range + (DateTime.now().day + 1).toString() +
+      '/' +
+      DateTime.now().month.toString();
+    }
+    return range;
+  }  
 }
