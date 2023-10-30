@@ -22,7 +22,7 @@ class _LogoScreenState extends State<LogoScreen> {
     Future.delayed(Duration(seconds: 5), () {
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(
-          builder: (context) => widget.isLogged ? PrincipalScreen() : PrincipalFuctionsScreen(), // La siguiente pantalla
+          builder: (context) => widget.isLogged ? PrincipalScreen(housingUser: false,) : PrincipalFuctionsScreen(), // La siguiente pantalla
         ),
       );
     });
