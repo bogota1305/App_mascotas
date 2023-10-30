@@ -5,6 +5,7 @@ import 'package:app_mascotas/profile/ui/screens/guest/payment_methods_screen.dar
 import 'package:app_mascotas/reservation/ui/widgets/resume_reservation_card.dart';
 import 'package:app_mascotas/theme/colors/dug_colors.dart';
 import 'package:app_mascotas/theme/text/text_size.dart';
+import 'package:app_mascotas/widgets/buttons/principal_button.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
 
@@ -38,12 +39,57 @@ class _GuestProfileScreenState extends State<GuestProfileScreen> {
             ),
           ),
         ),
-        backgroundColor: DugColors.blue,
+        backgroundColor: pet ? DugColors.green : DugColors.purple,
       ),
       body: SingleChildScrollView(
         child: Column(
           children: [
             SizedBox(height: context.spacing.xxl),
+            Visibility(
+              visible: !widget.ownProfile,
+              child: Padding(
+                padding: EdgeInsets.only(bottom: context.spacing.sm),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text("Tipo:", style: TextStyle(fontWeight: FontWeight.bold, fontSize: context.text.size.sm),),
+                    Icon(Icons.nightlight, color: DugColors.purple,),
+                    Text("Noches", style: TextStyle(fontSize: context.text.size.sm),)
+                  ],
+                ),
+              )
+            ),
+            Visibility(
+              visible: !widget.ownProfile,
+              child: Padding(
+                padding: EdgeInsets.only(bottom: context.spacing.sm),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text("Oct 25", style: TextStyle(fontSize: context.text.size.sm),),
+                    Text(" - ", style: TextStyle(fontSize: context.text.size.sm),),
+                    Text("Oct 30", style: TextStyle(fontSize: context.text.size.sm),),
+                    Text(" (5 noches)", style: TextStyle(fontWeight: FontWeight.bold, fontSize: context.text.size.sm),),
+                  ],
+                ),
+              )
+            ),
+            Visibility(
+              visible: !widget.ownProfile,
+              child: Padding(
+                padding: EdgeInsets.only(bottom: context.spacing.sm),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text("Total:", style: TextStyle(fontWeight: FontWeight.bold, fontSize: context.text.size.sm),),
+                    Text(" \$250,000", style: TextStyle(fontSize: context.text.size.sm),)
+                  ],
+                ),
+              )
+            ),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 55),
               child: Row(
@@ -59,6 +105,7 @@ class _GuestProfileScreenState extends State<GuestProfileScreen> {
                       image: 'https://media.istockphoto.com/id/1200677760/es/foto/retrato-de-apuesto-joven-sonriente-con-los-brazos-cruzados.jpg?b=1&s=612x612&w=0&k=20&c=3OB0hSUgwzlzUh8ek-6Z2z_XwFKnRE7IOHb1oWvoMZ4=',
                       isUser: true,
                       name: 'Juan Diego',
+                      ownProfile: widget.ownProfile,
                     ),
                   ),
                   Stack(
@@ -73,6 +120,7 @@ class _GuestProfileScreenState extends State<GuestProfileScreen> {
                           image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/04/Labrador_Retriever_%281210559%29.jpg/1200px-Labrador_Retriever_%281210559%29.jpg',
                           isUser: false,
                           name: 'Max',
+                          ownProfile: widget.ownProfile,
                         ),
                       ),
                       Visibility(
@@ -150,6 +198,23 @@ class _GuestProfileScreenState extends State<GuestProfileScreen> {
               ),
             ),
             SizedBox(height: context.spacing.md),
+            Visibility(
+              visible: !widget.ownProfile,
+              child: PrincipalButton(
+                onPressed: () {}, 
+                text: 'Aceptar solicitud'
+              ),
+            ),
+            SizedBox(height: context.spacing.xs),
+            Visibility(
+              visible: !widget.ownProfile,
+              child: PrincipalButton(
+                onPressed: () {}, 
+                text: 'Rechazar solicitud',
+                backgroundColor: DugColors.orange,
+              ),
+            ),
+            SizedBox(height: context.spacing.md),
           ],
         ),
       ),
@@ -173,6 +238,7 @@ class GuestProfileContent extends StatelessWidget {
           child: ProfileRatingCardContent(
             pet: false,
             rating: '4.8',
+            ownProfile: ownProfile,
           ),
         ),
         SizedBox(height: context.spacing.md),
@@ -274,6 +340,7 @@ class PetProfileContent extends StatelessWidget {
           child: ProfileRatingCardContent(
             pet: true,
             rating: '4.5',
+            ownProfile: ownProfile,
           ),
         ),
         SizedBox(height: context.spacing.md),
@@ -309,18 +376,20 @@ class ProfileCircleCard extends StatelessWidget {
     required this.pet,
     required this.isUser,
     required this.name,
-    required this.image,
+    required this.image, 
+    required this.ownProfile,
   });
 
   final bool pet;
   final bool isUser;
   final String name;
   final String image;
+  final bool ownProfile;
 
   @override
   Widget build(BuildContext context) {
     bool petActive = isUser ? pet : !pet;
-    Color activeColor = isUser ? DugColors.blue : DugColors.green;
+    Color activeColor = pet ? DugColors.green : DugColors.purple;
 
     return Column(
       children: [
@@ -380,11 +449,13 @@ class ProfileCircleCard extends StatelessWidget {
 class ProfileRatingCardContent extends StatelessWidget {
   final bool pet;
   final String rating;
+  final bool ownProfile;
 
   const ProfileRatingCardContent({
     super.key,
     required this.pet,
-    required this.rating,
+    required this.rating, 
+    required this.ownProfile,
   });
 
   @override
@@ -395,7 +466,7 @@ class ProfileRatingCardContent extends StatelessWidget {
         Row(
           children: [
             Icon(Icons.star,
-                color: pet ? DugColors.green : DugColors.blue, size: 40),
+                color: pet ? DugColors.green : DugColors.purple, size: 40),
             Text(
               rating,
               style: TextStyle(
@@ -420,7 +491,7 @@ class ProfileRatingCardContent extends StatelessWidget {
                     borderRadius: BorderRadius.all(
                       Radius.circular(context.radius.lg),
                     ),
-                    color: pet ? DugColors.green : DugColors.blue,
+                    color: pet ? DugColors.green : DugColors.purple,
                   ),
                   child: Padding(
                     padding: EdgeInsets.symmetric(
@@ -469,7 +540,7 @@ class GuestProfileLocationCardContent extends StatelessWidget {
                 borderRadius: BorderRadius.all(
                   Radius.circular(context.radius.lg),
                 ),
-                color: DugColors.blue,
+                color: DugColors.purple,
               ),
               child: Padding(
                 padding: EdgeInsets.symmetric(
@@ -543,10 +614,10 @@ class GuestProfileLocationToggleButtonsState
       },
       borderRadius: BorderRadius.circular(30.0),
       selectedColor: DugColors.white,
-      fillColor: DugColors.blue,
-      borderColor: DugColors.blue,
+      fillColor: DugColors.purple,
+      borderColor: DugColors.purple,
       borderWidth: 2.0,
-      selectedBorderColor: DugColors.blue,
+      selectedBorderColor: DugColors.purple,
     );
   }
 }
@@ -606,7 +677,7 @@ class GuestProfilePaymentCardContent extends StatelessWidget {
                   borderRadius: BorderRadius.all(
                     Radius.circular(context.radius.lg),
                   ),
-                  color: DugColors.blue,
+                  color: DugColors.purple,
                 ),
                 child: Padding(
                   padding: EdgeInsets.symmetric(
@@ -629,7 +700,7 @@ class GuestProfilePaymentCardContent extends StatelessWidget {
         ),
         Row(
           children: [
-            Icon(Icons.credit_card, color: DugColors.blue),
+            Icon(Icons.credit_card, color: DugColors.purple),
             SizedBox(
               width: context.spacing.xxxs,
             ),
@@ -670,7 +741,7 @@ class GuestProfileInfoCardContent extends StatelessWidget {
                 borderRadius: BorderRadius.all(
                   Radius.circular(context.radius.lg),
                 ),
-                color: DugColors.blue,
+                color: DugColors.purple,
               ),
               child: Padding(
                 padding: EdgeInsets.symmetric(
@@ -744,7 +815,7 @@ class GuestProfileDescriptionCardContent extends StatelessWidget {
                   borderRadius: BorderRadius.all(
                     Radius.circular(context.radius.lg),
                   ),
-                  color: pet ? DugColors.green : DugColors.blue,
+                  color: pet ? DugColors.green : DugColors.purple,
                 ),
                 child: Padding(
                   padding: EdgeInsets.symmetric(
