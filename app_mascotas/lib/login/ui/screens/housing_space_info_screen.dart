@@ -1,7 +1,11 @@
 import 'package:app_mascotas/extensions/dimension_extension.dart';
 import 'package:app_mascotas/extensions/radius_extension.dart';
 import 'package:app_mascotas/home/ui/widgets/app_bar_dug.dart';
+import 'package:app_mascotas/login/models/accomodation_model.dart';
+import 'package:app_mascotas/login/models/localization_model.dart';
+import 'package:app_mascotas/login/models/user_model.dart';
 import 'package:app_mascotas/login/ui/screens/housing_profile_creation_screen.dart';
+import 'package:app_mascotas/login/ui/screens/user_personal_info_screen.dart';
 import 'package:app_mascotas/theme/colors/dug_colors.dart';
 import 'package:app_mascotas/theme/text/text_size.dart';
 import 'package:app_mascotas/widgets/buttons/principal_button.dart';
@@ -11,6 +15,9 @@ import 'dart:io';
 import 'package:image_picker/image_picker.dart';
 
 class HousingSpaceInfo extends StatefulWidget {
+  final User user;
+
+  const HousingSpaceInfo({super.key, required this.user});
   @override
   _HousingSpaceInfoState createState() => _HousingSpaceInfoState();
 }
@@ -124,84 +131,107 @@ class _HousingSpaceInfoState extends State<HousingSpaceInfo> {
             ),
             SizedBox(height: 16.0),
             RegistrationTextBox(
-                title: 'Servicios Ofrecidos',
-                textBox: Column(
-                  children: [
-                    CheckboxListTile(
-                      title: Text('Noche'),
-                      value: offerNightService,
+              title: 'Servicios Ofrecidos',
+              textBox: Column(
+                children: [
+                  CheckboxListTile(
+                    title: Text('Noche'),
+                    value: offerNightService,
+                    onChanged: (value) {
+                      setState(() {
+                        offerNightService = value!;
+                        if (!value) {
+                          pricePerNight = 0.0;
+                        }
+                      });
+                    },
+                  ),
+                  if (offerNightService)
+                    TextField(
+                      controller: pricePerNightController,
+                      keyboardType: TextInputType.number,
+                      decoration: InputDecoration(
+                        labelText: 'Precio por Noche',
+                        hintText: 'Precio por noche en USD',
+                        border: OutlineInputBorder(
+                          borderRadius:
+                              BorderRadius.circular(context.radius.xxxl),
+                        ),
+                      ),
                       onChanged: (value) {
                         setState(() {
-                          offerNightService = value!;
-                          if (!value) {
-                            pricePerNight = 0.0;
-                          }
+                          pricePerNight = double.tryParse(value) ?? 0.0;
                         });
                       },
                     ),
-                    if (offerNightService)
-                      TextField(
-                        controller: pricePerNightController,
-                        keyboardType: TextInputType.number,
-                        decoration: InputDecoration(
-                          labelText: 'Precio por Noche',
-                          hintText: 'Precio por noche en USD',
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(context.radius.xxxl),
-                          ),
+                  CheckboxListTile(
+                    title: Text('Hora'),
+                    value: offerHourlyService,
+                    onChanged: (value) {
+                      setState(() {
+                        offerHourlyService = value!;
+                        if (!value) {
+                          pricePerHour = 0.0;
+                        }
+                      });
+                    },
+                  ),
+                  if (offerHourlyService)
+                    TextField(
+                      controller: pricePerHourController,
+                      keyboardType: TextInputType.number,
+                      decoration: InputDecoration(
+                        labelText: 'Precio por Hora',
+                        hintText: 'Precio por hora en USD',
+                        border: OutlineInputBorder(
+                          borderRadius:
+                              BorderRadius.circular(context.radius.xxxl),
                         ),
-                        onChanged: (value) {
-                          setState(() {
-                            pricePerNight = double.tryParse(value) ?? 0.0;
-                          });
-                        },
                       ),
-                    CheckboxListTile(
-                      title: Text('Hora'),
-                      value: offerHourlyService,
                       onChanged: (value) {
                         setState(() {
-                          offerHourlyService = value!;
-                          if (!value) {
-                            pricePerHour = 0.0;
-                          }
+                          pricePerHour = double.tryParse(value) ?? 0.0;
                         });
                       },
                     ),
-                    if (offerHourlyService)
-                      TextField(
-                        controller: pricePerHourController,
-                        keyboardType: TextInputType.number,
-                        decoration: InputDecoration(
-                          labelText: 'Precio por Hora',
-                          hintText: 'Precio por hora en USD',
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(context.radius.xxxl),
-                          ),
-                        ),
-                        onChanged: (value) {
-                          setState(() {
-                            pricePerHour = double.tryParse(value) ?? 0.0;
-                          });
-                        },
-                      ),
-                  ],
-                )),
+                ],
+              ),
+            ),
             SizedBox(height: 80.0),
             PrincipalButton(
               onPressed: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (context) =>
-                        HousingProfileCreationScreen(), // La siguiente pantalla
-                  ),
-                );
+                onTapAccomodationButton(context);
               },
               text: 'Enviar Alojamiento',
             ),
             SizedBox(height: 15.0),
           ],
         ),
+      ),
+    );
+  }
+
+  void onTapAccomodationButton(BuildContext context) {
+    Accommodation accommodation = Accommodation(
+      photos: accommodationImages,
+      ubicacion: Localization(
+        ciudad: 'Bogotá',
+        direccion: address,
+        indicacionesEspeciales: '',
+      ),
+      descripcionEspacio: description,
+      precioPorNoche: pricePerNight,
+      precioPorHora: pricePerHour,
+      idUser: widget.user.id ?? '',
+    );
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => HousingProfileCreationScreen(
+          user: widget.user.copyWith(
+            alojamiento: accommodation,
+          ),
+          accommodation: accommodation,
+        ), // La siguiente pantalla
       ),
     );
   }

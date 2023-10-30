@@ -4,6 +4,10 @@ import 'package:app_mascotas/extensions/dimension_extension.dart';
 import 'package:app_mascotas/extensions/radius_extension.dart';
 import 'package:app_mascotas/home/ui/screens/principal_screen.dart';
 import 'package:app_mascotas/home/ui/widgets/app_bar_dug.dart';
+import 'package:app_mascotas/login/models/accomodation_model.dart';
+import 'package:app_mascotas/login/models/user_model.dart';
+import 'package:app_mascotas/login/repository/accommodation_registration_repository.dart';
+import 'package:app_mascotas/login/repository/user_registration_repository.dart';
 import 'package:app_mascotas/theme/colors/dug_colors.dart';
 import 'package:app_mascotas/theme/text/text_size.dart';
 import 'package:app_mascotas/widgets/buttons/principal_button.dart';
@@ -11,6 +15,12 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
 class HousingProfileCreationScreen extends StatefulWidget {
+  final User user;
+  final Accommodation accommodation;
+
+  const HousingProfileCreationScreen(
+      {super.key, required this.user, required this.accommodation});
+
   @override
   _HousingProfileCreationScreenState createState() =>
       _HousingProfileCreationScreenState();
@@ -22,6 +32,11 @@ class _HousingProfileCreationScreenState
   List<String> profileImages = []; // Lista de rutas de imágenes
   String description = '';
   final descriptionController = TextEditingController();
+  final UserRegistrationRepository userRegistrationRepository =
+      UserRegistrationRepository();
+  final AccommodationsRegistrationRepository
+      accommodationsRegistrationRepository =
+      AccommodationsRegistrationRepository();
 
   @override
   void dispose() {
@@ -176,18 +191,34 @@ class _HousingProfileCreationScreenState
             SizedBox(height: 80.0),
             PrincipalButton(
               onPressed: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (context) =>
-                        PrincipalScreen(), // La siguiente pantalla
-                  ),
-                );
+                onTapProfileButton(context);
               },
               text: 'Guardar perfil',
             ),
             SizedBox(height: 15.0),
           ],
         ),
+      ),
+    );
+  }
+
+  void onTapProfileButton(BuildContext context) {
+    userRegistrationRepository.registerUser(
+      context,
+      widget.user.copyWith(
+        fotos: profileImages,
+        descripcion: description,
+      ),
+    );
+    accommodationsRegistrationRepository.registerAccommodations(
+      context,
+      widget.accommodation,
+    );
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => PrincipalScreen(
+          housingUser: true,
+        ), // La siguiente pantalla
       ),
     );
   }
