@@ -64,11 +64,13 @@ class _MapHomeState extends State<MapHome> {
             builder: (builder) {
               return Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: HousingOrRequestCard(
-                  name: 'name',
-                  image: customMarker, color: DugColors.blue, housing: true, 
-                  favorite: false,
-                ),
+                child: SizedBox(),
+              //   child: HousingOrRequestCard(
+              //     name: 'name',
+              //     image: customMarker,
+              //     housing: true, 
+              //     favorite: false,
+              //   ),
               );
             },
           );

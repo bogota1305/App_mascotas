@@ -28,18 +28,18 @@ class NavigationBloc extends Bloc<NavigationEvent, int> {
 }
 
 class PrincipalScreen extends StatefulWidget {
+
+  final bool housingUser;
+
+  const PrincipalScreen({super.key, required this.housingUser});
+
   @override
   State<PrincipalScreen> createState() => _PrincipalScreenState();
 }
 
 class _PrincipalScreenState extends State<PrincipalScreen> {
   int _currentIndex = 0;
-  final List<Widget> _pages = [
-    HomeScreen(),
-    FavoritesScreen(),
-    MessageScreen(),
-  ];
-
+  
   @override
   void initState() {
     super.initState();
@@ -47,6 +47,13 @@ class _PrincipalScreenState extends State<PrincipalScreen> {
 
   @override
   Widget build(BuildContext context) {
+
+    final List<Widget> _pages = [
+    HomeScreen(housingUser: widget.housingUser, activeService: false,),
+    FavoritesScreen(),
+    MessageScreen(),
+  ];
+
     return Scaffold(
       appBar: PreferredSize(
         preferredSize: Size.fromHeight(_currentIndex == 0 ? 120 : 80),
@@ -55,55 +62,9 @@ class _PrincipalScreenState extends State<PrincipalScreen> {
           title: AppBarDug(
             homeScreen: _currentIndex == 0,
             barContent: _currentIndex != 0
-                ? Row(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Text(
-                        _currentIndex == 1 ? 'Favoritos' : 'Mensajes',
-                        style: TextStyle(
-                          fontSize: context.text.size.lg,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      SizedBox(
-                        width: context.spacing.xxxs,
-                      ),
-                      Icon(_currentIndex == 1 ? Icons.favorite : Icons.message),
-                      Spacer(),
-                      InkWell(
-                        onTap: () {
-                          Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (context) => GuestProfileScreen(
-                                        ownProfile: true,
-                                      )));
-                        },
-                        child: Row(
-                          children: [
-                            Text(
-                              'Perfil',
-                              style: TextStyle(
-                                fontSize: context.text.size.xs,
-                                fontWeight: FontWeight.bold,
-                                color: DugColors.white,
-                              ),
-                            ),
-                            SizedBox(
-                              width: 12,
-                            ),
-                            CircleAvatar(
-                              backgroundImage: NetworkImage(
-                                'https://media.istockphoto.com/id/1200677760/es/foto/retrato-de-apuesto-joven-sonriente-con-los-brazos-cruzados.jpg?b=1&s=612x612&w=0&k=20&c=3OB0hSUgwzlzUh8ek-6Z2z_XwFKnRE7IOHb1oWvoMZ4=',
-                              ),
-                              radius: 30,
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  )
+                ? AppBarNotPrincipalScreen(currentIndex: _currentIndex)
                 : null,
+            housingUser: widget.housingUser,
           ),
           shape: ShapeBorder.lerp(
             RoundedRectangleBorder(
@@ -115,7 +76,7 @@ class _PrincipalScreenState extends State<PrincipalScreen> {
             1.0,
           ),
           toolbarHeight: 120,
-          backgroundColor: DugColors.blue,
+          backgroundColor: widget.housingUser ? DugColors.orange : DugColors.blue,
         ),
       ),
       backgroundColor: DugColors.white,
@@ -167,5 +128,66 @@ class _PrincipalScreenState extends State<PrincipalScreen> {
         ],
       ),
     );
+  }
+}
+
+class AppBarNotPrincipalScreen extends StatelessWidget {
+  const AppBarNotPrincipalScreen({
+    super.key,
+    required int currentIndex,
+  }) : _currentIndex = currentIndex;
+
+  final int _currentIndex;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Text(
+            _currentIndex == 1 ? 'Favoritos' : 'Mensajes',
+            style: TextStyle(
+              fontSize: context.text.size.lg,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          SizedBox(
+            width: context.spacing.xxxs,
+          ),
+          Icon(_currentIndex == 1 ? Icons.favorite : Icons.message),
+          Spacer(),
+          InkWell(
+            onTap: () {
+              Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => GuestProfileScreen(
+                            ownProfile: true,
+                          )));
+            },
+            child: Row(
+              children: [
+                Text(
+                  'Perfil',
+                  style: TextStyle(
+                    fontSize: context.text.size.xs,
+                    fontWeight: FontWeight.bold,
+                    color: DugColors.white,
+                  ),
+                ),
+                SizedBox(
+                  width: 12,
+                ),
+                CircleAvatar(
+                  backgroundImage: NetworkImage(
+                    'https://media.istockphoto.com/id/1200677760/es/foto/retrato-de-apuesto-joven-sonriente-con-los-brazos-cruzados.jpg?b=1&s=612x612&w=0&k=20&c=3OB0hSUgwzlzUh8ek-6Z2z_XwFKnRE7IOHb1oWvoMZ4=',
+                  ),
+                  radius: 30,
+                ),
+              ],
+            ),
+          ),
+        ],
+      );
   }
 }

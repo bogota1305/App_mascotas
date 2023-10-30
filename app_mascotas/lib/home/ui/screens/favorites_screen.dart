@@ -15,14 +15,13 @@ class FavoritesScreen extends StatelessWidget {
           SizedBox(
             height: context.spacing.sm,
           ),
-          HousingOrRequestCard(
-            name: 'Item 1',
-            image:
-                'https://media.istockphoto.com/id/1200677760/es/foto/retrato-de-apuesto-joven-sonriente-con-los-brazos-cruzados.jpg?b=1&s=612x612&w=0&k=20&c=3OB0hSUgwzlzUh8ek-6Z2z_XwFKnRE7IOHb1oWvoMZ4=',
-            housing: true,
-            color: DugColors.blue.withOpacity(0.6),
-            favorite: true,
-          ),
+          // HousingOrRequestCard(
+          //   name: 'Item 1',
+          //   image:
+          //       'https://media.istockphoto.com/id/1200677760/es/foto/retrato-de-apuesto-joven-sonriente-con-los-brazos-cruzados.jpg?b=1&s=612x612&w=0&k=20&c=3OB0hSUgwzlzUh8ek-6Z2z_XwFKnRE7IOHb1oWvoMZ4=',
+          //   housing: true,
+          //   favorite: true,
+          // ),
         ],
       ),
     ));
