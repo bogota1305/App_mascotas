@@ -1,7 +1,11 @@
 import 'package:app_mascotas/extensions/dimension_extension.dart';
 import 'package:app_mascotas/extensions/radius_extension.dart';
 import 'package:app_mascotas/home/ui/widgets/app_bar_dug.dart';
+import 'package:app_mascotas/login/models/accomodation_model.dart';
+import 'package:app_mascotas/login/models/user_model.dart';
+import 'package:app_mascotas/login/repository/user_registration_repository.dart';
 import 'package:app_mascotas/login/ui/screens/housing_space_info_screen.dart';
+import 'package:app_mascotas/login/ui/screens/owner_profile_creation_screen.dart';
 import 'package:app_mascotas/theme/colors/dug_colors.dart';
 import 'package:app_mascotas/theme/text/text_size.dart';
 import 'package:app_mascotas/widgets/buttons/principal_button.dart';
@@ -10,7 +14,13 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 
+enum UserTipe { housing, owner }
+
 class UserPersonalInfoScreen extends StatefulWidget {
+  final UserTipe userTipe;
+
+  const UserPersonalInfoScreen({super.key, required this.userTipe});
+
   @override
   _UserPersonalInfoScreenState createState() => _UserPersonalInfoScreenState();
 }
@@ -37,6 +47,8 @@ class _UserPersonalInfoScreenState extends State<UserPersonalInfoScreen> {
   final emailController = TextEditingController();
   final phoneController = TextEditingController();
   final prefixCellphoneController = TextEditingController();
+  final UserRegistrationRepository userRegistrationRepository =
+      UserRegistrationRepository();
 
   @override
   void dispose() {
@@ -70,14 +82,18 @@ class _UserPersonalInfoScreenState extends State<UserPersonalInfoScreen> {
         title: AppBarDug(
           homeScreen: false,
           barContent: Text(
-            'Registro de usuario',
+            widget.userTipe == UserTipe.housing
+                ? 'Registro de usuario - Cuidador'
+                : 'Registro de usuario - Dueño',
             style: TextStyle(
               fontSize: context.text.size.md,
               fontWeight: FontWeight.bold,
             ),
           ),
         ),
-        backgroundColor: DugColors.blue,
+        backgroundColor: widget.userTipe == UserTipe.housing
+            ? DugColors.blue
+            : DugColors.purple,
       ),
       body: SingleChildScrollView(
         padding: EdgeInsets.all(context.spacing.sm),
@@ -88,9 +104,12 @@ class _UserPersonalInfoScreenState extends State<UserPersonalInfoScreen> {
             Text(
               'Información Personal',
               style: TextStyle(
-                  fontSize: context.text.size.md,
-                  fontWeight: FontWeight.bold,
-                  color: DugColors.blue),
+                fontSize: context.text.size.md,
+                fontWeight: FontWeight.bold,
+                color: widget.userTipe == UserTipe.housing
+                    ? DugColors.blue
+                    : DugColors.purple,
+              ),
             ),
             SizedBox(height: context.spacing.xxl),
             Row(
@@ -315,7 +334,9 @@ class _UserPersonalInfoScreenState extends State<UserPersonalInfoScreen> {
             SizedBox(height: 16.0),
             ElevatedButton(
               style: ElevatedButton.styleFrom(
-                primary: DugColors.blue,
+                primary: widget.userTipe == UserTipe.housing
+                    ? DugColors.blue
+                    : DugColors.purple,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(context.radius.xxxl),
                 ),
@@ -383,18 +404,43 @@ class _UserPersonalInfoScreenState extends State<UserPersonalInfoScreen> {
             SizedBox(height: 80.0),
             PrincipalButton(
               onPressed: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (context) =>
-                        HousingSpaceInfo(), // La siguiente pantalla
-                  ),
-                );
+                onTapRegistrationButton(context);
               },
               text: 'Enviar Registro',
+              backgroundColor: widget.userTipe == UserTipe.housing
+                  ? DugColors.blue
+                  : DugColors.purple,
             ),
             SizedBox(height: 15.0),
           ],
         ),
+      ),
+    );
+  }
+
+  void onTapRegistrationButton(BuildContext context) {
+    User user = User(
+      nombre: firstName,
+      apellidos: lastName,
+      fotos: [],
+      descripcion: '',
+      contrasena: '',
+      fechaNacimiento: birthDate ?? DateTime.now(),
+      correo: email,
+      tipo: '',
+      sexo: gender,
+      prefijoTelefono: prefixCellphone,
+      telefono: phone,
+      tipoDocumento: idType,
+      documento: documentNumber,
+      pais: 'Colombia',
+      fotosId: imagePaths,
+    );
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => widget.userTipe == UserTipe.housing
+            ? HousingSpaceInfo(user: user)
+            : OwnerProfileCreationScreen(user: user),
       ),
     );
   }

@@ -45,12 +45,12 @@ class SelectionUserScreen extends StatelessWidget {
               const SizedBox(height: 100.0),
               PrincipalButton(
                 onPressed: () {
-                  // Navigator.of(context).pushReplacement(
-                  //   MaterialPageRoute(
-                  //     builder: (context) =>
-                  //         UserPersonalInfoScreen(), // La siguiente pantalla
-                  //   ),
-                  // );
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) =>
+                          UserPersonalInfoScreen(userTipe: UserTipe.owner,), // La siguiente pantalla
+                    ),
+                  );
                 },
                 text: 'Dueño',
                 backgroundColor: DugColors.white,
@@ -62,7 +62,7 @@ class SelectionUserScreen extends StatelessWidget {
                   Navigator.of(context).push(
                     MaterialPageRoute(
                       builder: (context) =>
-                          UserPersonalInfoScreen(), // La siguiente pantalla
+                          UserPersonalInfoScreen(userTipe: UserTipe.housing,), // La siguiente pantalla
                     ),
                   );
                 },
