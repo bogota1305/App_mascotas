@@ -1,5 +1,7 @@
 import 'package:app_mascotas/login/models/accomodation_model.dart';
-import 'package:app_mascotas/login/models/dod_model.dart';
+import 'package:app_mascotas/login/models/dog_model.dart';
+import 'package:app_mascotas/login/models/rating_model.dart';
+import 'package:app_mascotas/reservation/models/request_controller.dart';
 
 class User {
   String? id;
@@ -18,13 +20,15 @@ class User {
   String documento;
   List<Dog>? perros;
   String pais;
-  List<String> fotosId;
+  List<String> fotosDocumento;
   Accommodation? alojamiento;
+  List<Rating> calificaciones; // Lista de calificaciones
+  double calificacionPromedio; // Calificación promedio
+  String? distancia;
   //List<PaymentMethod> metodosDePago;
   //BankAccount cuentaBancaraia;
-  //List<Rating> calificaciones;
-  // List<solicitudesCreadas: [];
-  // List<solicitudesRecividas: [];
+  List<RequestModel>solicitudesCreadas;
+  List<RequestModel>solicitudesRecibidas;
   //Veterinary clinicaVeterinaria;
   //Insurance seguro;
   // List<preferenciasDeRazasAlojar: [];
@@ -47,15 +51,17 @@ class User {
     required this.documento,
     this.perros,
     required this.pais,
-    required this.fotosId,
+    required this.fotosDocumento,
     this.alojamiento,
+    required this.calificaciones, // Inicializa la lista de calificaciones
+    required this.calificacionPromedio, // Inicializa la calificación promedio como null
+    this.distancia,
     // required this.metodosDePago,
     // required this.cuentaBancaraia,
-    // required this.calificaciones,
     // required this.clinicaVeterinaria,
     // required this.seguro,
-    // this.solicitudesCreadas,
-    // this.solicitudesRecividas,
+    required this.solicitudesCreadas,
+    required this.solicitudesRecibidas,
     // this.preferenciasDeRazasAlojar,
     // this.perrosNoAlojados,
   });
@@ -77,11 +83,13 @@ class User {
       'documento': documento,
       'perros': perros?.map((dog) => dog.toJson()).toList(),
       'pais': pais,
-      'fotosId': fotosId,
+      'fotosDocumento': fotosDocumento,
       'alojamiento': alojamiento?.toJson(),
+      'calificaciones': calificaciones.map((rating) => rating.toJson()).toList(),
+      'solicitudesCreadas': solicitudesCreadas.map((request) => request.toJson()).toList(),
+      'solicitudesRecibidas': solicitudesRecibidas.map((request) => request.toJson()).toList(),
       // 'metodosDePago': metodosDePago.map((payment) => payment.toJson()).toList(),
       // 'cuentaBancaria': cuentaBancaria.toJson(),
-      // 'calificaciones': calificaciones.map((rating) => rating.toJson()).toList(),
       // 'clinicaVeterinaria': clinicaVeterinaria.toJson(),
       // 'seguro': seguro.toJson(),
     };
@@ -92,6 +100,23 @@ class User {
     final List<dynamic> perrosData = json['perros'] ?? [];
     final List<Dog> perros = perrosData.isNotEmpty ? perrosData.map((perroJson) => Dog.fromJson(perroJson)).toList() : [];
 
+    final List<dynamic> calificacionesData = json['calificaciones'] ?? [];
+    final List<Rating> calificaciones = calificacionesData.isNotEmpty ? calificacionesData.map((ratingJson) => Rating.fromJson(ratingJson)).toList() : [];
+
+    final List<dynamic> solicitudesCreadasData = json['solicitudesCreadas'] ?? [];
+    final List<RequestModel> solicitudesCreadas = solicitudesCreadasData.isNotEmpty ? solicitudesCreadasData.map((solicitudCreadaJson) => RequestModel.fromJson(solicitudCreadaJson)).toList() : [];
+
+    final List<dynamic> solicitudesRecibidasData = json['solicitudesRecibidas'] ?? [];
+    final List<RequestModel> solicitudesRecibidas = solicitudesRecibidasData.isNotEmpty ? solicitudesRecibidasData.map((solicitudRecibidaJson) => RequestModel.fromJson(solicitudRecibidaJson)).toList() : [];
+
+    double promedio = json['calificacionPromedio'] ?? 0.0;
+    if (calificaciones.isNotEmpty && promedio == 0) {
+      for (var calificacion in calificaciones) {
+        promedio += calificacion.puntuacion;
+      }
+      promedio /= calificaciones.length;
+    }
+
     return User(
       id: json['id'] ?? '',
       nombre: json['nombre'] ?? '',
@@ -99,7 +124,7 @@ class User {
       fotos: List<String>.from(json['fotos'] ?? []),
       descripcion: json['descripcion'] ?? '',
       contrasena: json['contrasena'] ?? '',
-      fechaNacimiento: DateTime.parse("2011-10-02T00:00:00.000"), //DateTime.parse(json['fechaNacimiento'] ?? []) , TODO
+      fechaNacimiento: DateTime.parse(json['fechaNacimiento'] ?? []),
       correo: json['correo'] ?? '',
       tipo: json['tipo'] ?? '',
       sexo: json['sexo'] ?? '',
@@ -108,9 +133,13 @@ class User {
       tipoDocumento: json['tipoDocumento'] ?? '',
       documento: json['documento'].toString(),
       pais: json['pais'] ?? '',
-      fotosId: List<String>.from(json['fotosId'] ?? []), 
+      fotosDocumento: List<String>.from(json['fotosDocumento'] ?? []), 
       perros: perros,
       alojamiento: json['alojamiento'] != null ? Accommodation.fromJson(json['alojamiento']) : null,
+      calificaciones: calificaciones,
+      calificacionPromedio: promedio, 
+      solicitudesCreadas: solicitudesCreadas, 
+      solicitudesRecibidas: solicitudesRecibidas, 
     );
   }
 
@@ -131,11 +160,15 @@ class User {
     String? documento,
     List<Dog>? perros,
     String? pais,
-    List<String>? fotosId,
+    List<String>? fotosDocumento,
     Accommodation? alojamiento,
+    List<Rating>? calificaciones,
+    double? calificacionPromedio, 
+    String? distancia,
+    List<RequestModel>? solicitudesCreadas,
+    List<RequestModel>? solicitudesRecibidas,
     // List<PaymentMethod>? metodosDePago,
     // BankAccount? cuentaBancaraia,
-    // List<Rating>? calificaciones,
     // Veterinary? clinicaVeterinaria,
     // Insurance? seguro,
   }) {
@@ -156,11 +189,15 @@ class User {
       documento: documento ?? this.documento,
       perros: perros ?? this.perros,
       pais: pais ?? this.pais,
-      fotosId: fotosId ?? this.fotosId,
+      fotosDocumento: fotosDocumento ?? this.fotosDocumento,
       alojamiento: alojamiento ?? this.alojamiento,
+      calificaciones: calificaciones ?? this.calificaciones, // Actualiza la lista de calificaciones
+      calificacionPromedio: calificacionPromedio ?? this.calificacionPromedio, // Actualiza la calificación promedio
+      distancia: distancia ?? this.distancia, 
+      solicitudesCreadas: solicitudesCreadas ?? this.solicitudesCreadas, 
+      solicitudesRecibidas: solicitudesRecibidas ?? this.solicitudesRecibidas,
       // metodosDePago: metodosDePago ?? this.metodosDePago,
       // cuentaBancaraia: cuentaBancaraia ?? this.cuentaBancaraia,
-      // calificaciones: calificaciones ?? this.calificaciones,
       // clinicaVeterinaria: clinicaVeterinaria ?? this.clinicaVeterinaria,
       // seguro: seguro ?? this.seguro,
     );

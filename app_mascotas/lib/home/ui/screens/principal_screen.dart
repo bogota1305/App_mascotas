@@ -1,7 +1,10 @@
 import 'package:app_mascotas/extensions/dimension_extension.dart';
 import 'package:app_mascotas/extensions/radius_extension.dart';
+import 'package:app_mascotas/home/controller/request_housing_users_controller.dart';
+import 'package:app_mascotas/home/controller/search_controller.dart';
 import 'package:app_mascotas/home/ui/screens/favorites_screen.dart';
 import 'package:app_mascotas/home/ui/screens/home_screen.dart';
+import 'package:app_mascotas/login/controller/loged_user_controller.dart';
 import 'package:app_mascotas/messages/ui/screens/message_screen.dart';
 import 'package:app_mascotas/home/ui/widgets/app_bar_dug.dart';
 import 'package:app_mascotas/profile/ui/screens/guest/guest_profile_screen.dart';
@@ -28,10 +31,14 @@ class NavigationBloc extends Bloc<NavigationEvent, int> {
 }
 
 class PrincipalScreen extends StatefulWidget {
-
   final bool housingUser;
+  final LogedUserController logedUserController;
 
-  const PrincipalScreen({super.key, required this.housingUser});
+  const PrincipalScreen({
+    super.key,
+    required this.housingUser,
+    required this.logedUserController,
+  });
 
   @override
   State<PrincipalScreen> createState() => _PrincipalScreenState();
@@ -39,7 +46,9 @@ class PrincipalScreen extends StatefulWidget {
 
 class _PrincipalScreenState extends State<PrincipalScreen> {
   int _currentIndex = 0;
-  
+  SearchController searchController = SearchController();
+  RequestsHousingUsersController requestsHousingUsersController = RequestsHousingUsersController();
+
   @override
   void initState() {
     super.initState();
@@ -47,12 +56,16 @@ class _PrincipalScreenState extends State<PrincipalScreen> {
 
   @override
   Widget build(BuildContext context) {
-
     final List<Widget> _pages = [
-    HomeScreen(housingUser: widget.housingUser, activeService: false,),
-    FavoritesScreen(),
-    MessageScreen(),
-  ];
+      HomeScreen(
+        housingUser: widget.housingUser,
+        searchController: searchController, 
+        logedUserController: widget.logedUserController, 
+        requestsHousingUsersController: requestsHousingUsersController,
+      ),
+      FavoritesScreen(),
+      MessageScreen(logedUserController: widget.logedUserController,),
+    ];
 
     return Scaffold(
       appBar: PreferredSize(
@@ -62,9 +75,11 @@ class _PrincipalScreenState extends State<PrincipalScreen> {
           title: AppBarDug(
             homeScreen: _currentIndex == 0,
             barContent: _currentIndex != 0
-                ? AppBarNotPrincipalScreen(currentIndex: _currentIndex)
+                ? AppBarNotPrincipalScreen(currentIndex: _currentIndex, logedUserController: widget.logedUserController,)
                 : null,
             housingUser: widget.housingUser,
+            searchController: searchController, 
+            logedUserController: widget.logedUserController,
           ),
           shape: ShapeBorder.lerp(
             RoundedRectangleBorder(
@@ -76,7 +91,8 @@ class _PrincipalScreenState extends State<PrincipalScreen> {
             1.0,
           ),
           toolbarHeight: 120,
-          backgroundColor: widget.housingUser ? DugColors.orange : DugColors.blue,
+          backgroundColor:
+              widget.housingUser ? DugColors.orange : DugColors.blue,
         ),
       ),
       backgroundColor: DugColors.white,
@@ -132,9 +148,12 @@ class _PrincipalScreenState extends State<PrincipalScreen> {
 }
 
 class AppBarNotPrincipalScreen extends StatelessWidget {
+  final LogedUserController logedUserController;
+
   const AppBarNotPrincipalScreen({
     super.key,
     required int currentIndex,
+    required this.logedUserController,
   }) : _currentIndex = currentIndex;
 
   final int _currentIndex;
@@ -142,52 +161,57 @@ class AppBarNotPrincipalScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Text(
-            _currentIndex == 1 ? 'Favoritos' : 'Mensajes',
-            style: TextStyle(
-              fontSize: context.text.size.lg,
-              fontWeight: FontWeight.bold,
-            ),
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Text(
+          _currentIndex == 1 ? 'Favoritos' : 'Mensajes',
+          style: TextStyle(
+            fontSize: context.text.size.lg,
+            fontWeight: FontWeight.bold,
           ),
-          SizedBox(
-            width: context.spacing.xxxs,
-          ),
-          Icon(_currentIndex == 1 ? Icons.favorite : Icons.message),
-          Spacer(),
-          InkWell(
-            onTap: () {
+        ),
+        SizedBox(
+          width: context.spacing.xxxs,
+        ),
+        Icon(_currentIndex == 1 ? Icons.favorite : Icons.message),
+        Spacer(),
+        InkWell(
+          onTap: () {
+            if (logedUserController.user.id != 'Guest') {
               Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) => GuestProfileScreen(
-                            ownProfile: true,
-                          )));
-            },
-            child: Row(
-              children: [
-                Text(
-                  'Perfil',
-                  style: TextStyle(
-                    fontSize: context.text.size.xs,
-                    fontWeight: FontWeight.bold,
-                    color: DugColors.white,
+                context,
+                MaterialPageRoute(
+                  builder: (context) => GuestProfileScreen(
+                    ownProfile: true,
+                    logedUserController: logedUserController,
                   ),
                 ),
-                SizedBox(
-                  width: 12,
+              );
+            }
+          },
+          child: Row(
+            children: [
+              Text(
+                'Perfil',
+                style: TextStyle(
+                  fontSize: context.text.size.xs,
+                  fontWeight: FontWeight.bold,
+                  color: DugColors.white,
                 ),
-                CircleAvatar(
-                  backgroundImage: NetworkImage(
-                    'https://media.istockphoto.com/id/1200677760/es/foto/retrato-de-apuesto-joven-sonriente-con-los-brazos-cruzados.jpg?b=1&s=612x612&w=0&k=20&c=3OB0hSUgwzlzUh8ek-6Z2z_XwFKnRE7IOHb1oWvoMZ4=',
-                  ),
-                  radius: 30,
+              ),
+              SizedBox(
+                width: 12,
+              ),
+              CircleAvatar(
+                backgroundImage: NetworkImage(
+                  'https://media.istockphoto.com/id/1200677760/es/foto/retrato-de-apuesto-joven-sonriente-con-los-brazos-cruzados.jpg?b=1&s=612x612&w=0&k=20&c=3OB0hSUgwzlzUh8ek-6Z2z_XwFKnRE7IOHb1oWvoMZ4=',
                 ),
-              ],
-            ),
+                radius: 30,
+              ),
+            ],
           ),
-        ],
-      );
+        ),
+      ],
+    );
   }
 }

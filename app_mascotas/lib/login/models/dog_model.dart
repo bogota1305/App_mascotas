@@ -1,7 +1,7 @@
 import 'package:app_mascotas/login/models/user_model.dart';
 
 class Dog {
-  int? id;
+  String? id;
   String nombre;
   DateTime fechaNacimiento;
   String raza;
@@ -23,10 +23,9 @@ class Dog {
     required this.photos,
   });
 
-  // Método para crear una instancia de Dog a partir de un mapa JSON
   factory Dog.fromJson(Map<String, dynamic> json) {
     return Dog(
-      id: json['id'] ?? 0,
+      id: json['id'] ?? '',
       nombre: json['nombre'] ?? '',
       fechaNacimiento: DateTime.parse(json['fechaNacimiento'] ?? []),
       raza: json['raza'] ?? '',
@@ -38,7 +37,6 @@ class Dog {
     );
   }
 
-  // Método para convertir una instancia de Dog a un mapa JSON
   Map<String, dynamic> toJson() {
     return {
       'nombre': nombre,
@@ -52,9 +50,8 @@ class Dog {
     };
   }
 
-  // Método para crear una copia del objeto Dog con algunos campos actualizados
   Dog copyWith({
-    int? id,
+    String? id,
     String? nombre,
     DateTime? fechaNacimiento,
     String? raza,
