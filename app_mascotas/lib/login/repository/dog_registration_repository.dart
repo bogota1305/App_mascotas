@@ -1,11 +1,11 @@
 import 'dart:convert';
-import 'package:app_mascotas/login/models/dod_model.dart';
+import 'package:app_mascotas/login/models/dog_model.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
 class DogRegistrationRepository  {
   
-  final String url = 'http://192.168.10.21:3000/dogs'; 
+  final String url = 'http://192.168.10.15:3000/dogs'; 
 
 
   Future<void> registerDog(BuildContext context, Dog dog) async{  

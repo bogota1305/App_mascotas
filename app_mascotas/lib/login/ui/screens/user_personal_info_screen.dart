@@ -1,9 +1,11 @@
 import 'package:app_mascotas/extensions/dimension_extension.dart';
 import 'package:app_mascotas/extensions/radius_extension.dart';
 import 'package:app_mascotas/home/ui/widgets/app_bar_dug.dart';
+import 'package:app_mascotas/login/controller/loged_user_controller.dart';
 import 'package:app_mascotas/login/models/accomodation_model.dart';
 import 'package:app_mascotas/login/models/user_model.dart';
 import 'package:app_mascotas/login/repository/user_registration_repository.dart';
+import 'package:app_mascotas/login/ui/screens/housing_profile_creation_screen.dart';
 import 'package:app_mascotas/login/ui/screens/housing_space_info_screen.dart';
 import 'package:app_mascotas/login/ui/screens/owner_profile_creation_screen.dart';
 import 'package:app_mascotas/theme/colors/dug_colors.dart';
@@ -18,37 +20,47 @@ enum UserTipe { housing, owner }
 
 class UserPersonalInfoScreen extends StatefulWidget {
   final UserTipe userTipe;
+  final LogedUserController logedUserController;
 
-  const UserPersonalInfoScreen({super.key, required this.userTipe});
+  const UserPersonalInfoScreen({
+    super.key,
+    required this.userTipe,
+    required this.logedUserController,
+  });
 
   @override
   _UserPersonalInfoScreenState createState() => _UserPersonalInfoScreenState();
 }
 
 class _UserPersonalInfoScreenState extends State<UserPersonalInfoScreen> {
-  // Variables para almacenar la información personal
   String firstName = '';
-  String lastName = ''; // Nuevo campo para apellidos
+  String lastName = '';
   DateTime? birthDate;
   String documentNumber = '';
   String email = '';
   String phone = '';
-  String gender = 'Masculino'; // Valor predeterminado
+  String gender = 'Masculino';
   String prefixCellphone = '';
-  String idType = 'C.C.'; // Valor predeterminado
-  String idImage =
-      ''; // Almacena la ruta de la imagen del documento de identidad
-  List<String> imagePaths = []; // Lista de rutas de imágenes seleccionadas
+  String idType = 'C.C.';
+  List<String> imagePaths = [];
+  String password = '';
+  String repeatPassword = '';
 
-  // Controladores para los campos de entrada de texto
   final firstNameController = TextEditingController();
   final lastNameController = TextEditingController();
   final documentNumberController = TextEditingController();
   final emailController = TextEditingController();
   final phoneController = TextEditingController();
   final prefixCellphoneController = TextEditingController();
+  final passwordController = TextEditingController();
+  final repeatPasswordController = TextEditingController();
   final UserRegistrationRepository userRegistrationRepository =
       UserRegistrationRepository();
+
+  bool isEmailValid = true;
+  bool isPasswordValid = true;
+  bool arePasswordsMatching = true;
+  bool isPhoneValid = true;
 
   @override
   void dispose() {
@@ -59,6 +71,8 @@ class _UserPersonalInfoScreenState extends State<UserPersonalInfoScreen> {
     emailController.dispose();
     phoneController.dispose();
     prefixCellphoneController.dispose();
+    passwordController.dispose();
+    repeatPasswordController.dispose();
     super.dispose();
   }
 
@@ -90,6 +104,7 @@ class _UserPersonalInfoScreenState extends State<UserPersonalInfoScreen> {
               fontWeight: FontWeight.bold,
             ),
           ),
+          logedUserController: widget.logedUserController,
         ),
         backgroundColor: widget.userTipe == UserTipe.housing
             ? DugColors.blue
@@ -162,15 +177,63 @@ class _UserPersonalInfoScreenState extends State<UserPersonalInfoScreen> {
               title: 'Correo',
               textBox: TextField(
                 controller: emailController,
+                keyboardType: TextInputType.emailAddress,
                 decoration: InputDecoration(
                   labelText: 'Correo',
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(context.radius.xxxl),
                   ),
+                  errorText: !isEmailValid
+                      ? 'El formato de correo no es valido'
+                      : null,
                 ),
                 onChanged: (value) {
                   setState(() {
                     email = value;
+                  });
+                },
+              ),
+            ),
+            SizedBox(height: 16.0),
+            RegistrationTextBox(
+              title: 'Contraseña',
+              textBox: TextField(
+                controller: passwordController,
+                obscureText: true,
+                decoration: InputDecoration(
+                  labelText: 'Contraseña',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(context.radius.xxxl),
+                  ),
+                  errorText: !isPasswordValid
+                      ? 'La contraseña debe tener al menos 8 caracteres\ny contener al menos una letra mayúscula,\nuna letra minúscula y un número'
+                      : null,
+                ),
+                onChanged: (value) {
+                  setState(() {
+                    password = value;
+                  });
+                },
+              ),
+            ),
+            SizedBox(height: 16.0),
+            RegistrationTextBox(
+              title: 'Repetir Contraseña',
+              textBox: TextField(
+                controller: repeatPasswordController,
+                obscureText: true,
+                decoration: InputDecoration(
+                  labelText: 'Repetir Contraseña',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(context.radius.xxxl),
+                  ),
+                  errorText: password != repeatPassword
+                      ? 'Las contraseñas no coinciden'
+                      : null,
+                ),
+                onChanged: (value) {
+                  setState(() {
+                    repeatPassword = value;
                   });
                 },
               ),
@@ -241,14 +304,18 @@ class _UserPersonalInfoScreenState extends State<UserPersonalInfoScreen> {
             ),
             SizedBox(height: 16.0),
             RegistrationTextBox(
-              title: 'Teléfono',
+              title: 'Número celular',
               textBox: TextField(
                 controller: phoneController,
+                keyboardType: TextInputType.number,
                 decoration: InputDecoration(
-                  labelText: 'Teléfono',
+                  labelText: 'Número celular',
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(context.radius.xxxl),
                   ),
+                  errorText: !isPhoneValid
+                      ? 'El teléfono solo puede contener caracteres numericos'
+                      : null,
                 ),
                 onChanged: (value) {
                   setState(() {
@@ -404,7 +471,28 @@ class _UserPersonalInfoScreenState extends State<UserPersonalInfoScreen> {
             SizedBox(height: 80.0),
             PrincipalButton(
               onPressed: () {
-                onTapRegistrationButton(context);
+                if (validateForm()) {
+                  if (areAllFieldsFilled()) {
+                    onTapRegistrationButton(context);
+                  } else {
+                    showDialog(
+                      context: context,
+                      builder: (context) => AlertDialog(
+                        title: Text('Error'),
+                        content:
+                            Text('Completa todos los campos del formulario'),
+                        actions: [
+                          TextButton(
+                            onPressed: () {
+                              Navigator.of(context).pop();
+                            },
+                            child: Text('Aceptar'),
+                          ),
+                        ],
+                      ),
+                    );
+                  }
+                }
               },
               text: 'Enviar Registro',
               backgroundColor: widget.userTipe == UserTipe.housing
@@ -418,7 +506,7 @@ class _UserPersonalInfoScreenState extends State<UserPersonalInfoScreen> {
     );
   }
 
-  void onTapRegistrationButton(BuildContext context) {
+  Future<void> onTapRegistrationButton(BuildContext context) async {
     User user = User(
       nombre: firstName,
       apellidos: lastName,
@@ -434,14 +522,96 @@ class _UserPersonalInfoScreenState extends State<UserPersonalInfoScreen> {
       tipoDocumento: idType,
       documento: documentNumber,
       pais: 'Colombia',
-      fotosId: imagePaths,
+      fotosDocumento: imagePaths,
+      calificaciones: [],
+      calificacionPromedio: 0,
+      solicitudesCreadas: [],
+      solicitudesRecibidas: [],
     );
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => widget.userTipe == UserTipe.housing
-            ? HousingSpaceInfo(user: user)
-            : OwnerProfileCreationScreen(user: user),
-      ),
+
+    final bool succes = await userRegistrationRepository.registerUser(
+      context,
+      user,
     );
+
+    widget.logedUserController.user = user; 
+
+    if (succes) {
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (context) => widget.userTipe == UserTipe.housing
+              ? HousingProfileCreationScreen(user: user, logedUserController: widget.logedUserController,)
+              : OwnerProfileCreationScreen(user: user, logedUserController: widget.logedUserController,),
+        ),
+      );
+    }
+  }
+
+  bool validateForm() {
+    // Realiza validaciones aquí y actualiza las variables de validación
+    bool isFormValid = true;
+
+    // Validación de correo electrónico
+    isEmailValid = isValidEmail(email);
+
+    // Validación de contraseñas
+    isPasswordValid = isValidPassword(password);
+
+    // Verifica si las contraseñas coinciden
+    arePasswordsMatching = (password == repeatPassword);
+
+    isPhoneValid = validatePhone(phone);
+
+    // Verifica si todos los campos están llenos
+    isFormValid =
+        isEmailValid && isPasswordValid && arePasswordsMatching && isPhoneValid;
+
+    // Actualiza el estado
+    setState(() {
+      isEmailValid = isEmailValid;
+      isPasswordValid = isPasswordValid;
+      arePasswordsMatching = arePasswordsMatching;
+      isFormValid = isFormValid;
+      isPhoneValid = isPhoneValid;
+    });
+
+    return isFormValid;
+  }
+
+  bool isValidEmail(String email) {
+    final emailRegExp = RegExp(
+      r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$',
+    );
+
+    return emailRegExp.hasMatch(email);
+  }
+
+  bool isValidPassword(String password) {
+    // La contraseña debe tener al menos 8 caracteres y contener al menos una letra mayúscula, una letra minúscula y un número.
+    final passwordRegExp = RegExp(
+      r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$',
+    );
+
+    return passwordRegExp.hasMatch(password);
+  }
+
+  bool validatePhone(String value) {
+    final validCharacters = RegExp(r'^[0-9]+$');
+
+    return validCharacters.hasMatch(value);
+  }
+
+  bool areAllFieldsFilled() {
+    return firstName.isNotEmpty &&
+        lastName.isNotEmpty &&
+        email.isNotEmpty &&
+        password.isNotEmpty &&
+        repeatPassword.isNotEmpty &&
+        birthDate != null &&
+        documentNumber.isNotEmpty &&
+        phone.isNotEmpty &&
+        gender.isNotEmpty &&
+        //prefixCellphone.isNotEmpty &&
+        imagePaths.isNotEmpty;
   }
 }

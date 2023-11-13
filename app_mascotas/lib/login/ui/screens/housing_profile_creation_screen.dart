@@ -4,10 +4,12 @@ import 'package:app_mascotas/extensions/dimension_extension.dart';
 import 'package:app_mascotas/extensions/radius_extension.dart';
 import 'package:app_mascotas/home/ui/screens/principal_screen.dart';
 import 'package:app_mascotas/home/ui/widgets/app_bar_dug.dart';
+import 'package:app_mascotas/login/controller/loged_user_controller.dart';
 import 'package:app_mascotas/login/models/accomodation_model.dart';
 import 'package:app_mascotas/login/models/user_model.dart';
 import 'package:app_mascotas/login/repository/accommodation_registration_repository.dart';
 import 'package:app_mascotas/login/repository/user_registration_repository.dart';
+import 'package:app_mascotas/login/ui/screens/housing_space_info_screen.dart';
 import 'package:app_mascotas/theme/colors/dug_colors.dart';
 import 'package:app_mascotas/theme/text/text_size.dart';
 import 'package:app_mascotas/widgets/buttons/principal_button.dart';
@@ -16,10 +18,13 @@ import 'package:image_picker/image_picker.dart';
 
 class HousingProfileCreationScreen extends StatefulWidget {
   final User user;
-  final Accommodation accommodation;
+  final LogedUserController logedUserController;
 
-  const HousingProfileCreationScreen(
-      {super.key, required this.user, required this.accommodation});
+  const HousingProfileCreationScreen({
+    super.key,
+    required this.user,
+    required this.logedUserController,
+  });
 
   @override
   _HousingProfileCreationScreenState createState() =>
@@ -34,9 +39,6 @@ class _HousingProfileCreationScreenState
   final descriptionController = TextEditingController();
   final UserRegistrationRepository userRegistrationRepository =
       UserRegistrationRepository();
-  final AccommodationsRegistrationRepository
-      accommodationsRegistrationRepository =
-      AccommodationsRegistrationRepository();
 
   @override
   void dispose() {
@@ -57,7 +59,8 @@ class _HousingProfileCreationScreenState
               fontSize: context.text.size.md,
               fontWeight: FontWeight.bold,
             ),
-          ),
+          ), 
+          logedUserController: widget.logedUserController,
         ),
         backgroundColor: DugColors.blue,
       ),
@@ -202,24 +205,52 @@ class _HousingProfileCreationScreenState
     );
   }
 
-  void onTapProfileButton(BuildContext context) {
-    userRegistrationRepository.registerUser(
+  Future<void> onTapProfileButton(BuildContext context) async {
+    User updatedUser = widget.user.copyWith(
+      descripcion: description,
+      fotos: profileImages,
+      tipo: 'Cuidador',
+    );
+
+    String userId = '${updatedUser.pais}${updatedUser.documento}';
+
+    userRegistrationRepository.updateUser(
       context,
-      widget.user.copyWith(
-        fotos: profileImages,
-        descripcion: description,
-      ),
+      userId,
+      updatedUser,
     );
-    accommodationsRegistrationRepository.registerAccommodations(
-      context,
-      widget.accommodation,
-    );
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => PrincipalScreen(
-          housingUser: true,
-        ), // La siguiente pantalla
-      ),
-    );
+
+    widget.logedUserController.user = updatedUser;
+
+    if (areAllFieldsFilled()) {
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (context) => HousingSpaceInfo(
+            user: updatedUser,
+            logedUserController: widget.logedUserController,
+          ), // La siguiente pantalla
+        ),
+      );
+    } else {
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text('Error'),
+          content: Text('Completa todos los campos'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: Text('Aceptar'),
+            ),
+          ],
+        ),
+      );
+    }
+  }
+
+  bool areAllFieldsFilled() {
+    return description.isNotEmpty && profileImages.isNotEmpty;
   }
 }

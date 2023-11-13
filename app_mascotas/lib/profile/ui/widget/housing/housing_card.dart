@@ -5,8 +5,19 @@ import 'package:app_mascotas/theme/text/text_size.dart';
 import 'package:flutter/material.dart';
 
 class HousingCard extends StatelessWidget {
+  final String location;
+  final String pricePerNight;
+  final String pricePerHour;
+  final int ownDogs;
+  final int housingDogs;
+
   const HousingCard({
     super.key,
+    required this.location,
+    required this.pricePerNight,
+    required this.pricePerHour,
+    required this.ownDogs,
+    required this.housingDogs,
   });
 
   @override
@@ -16,7 +27,7 @@ class HousingCard extends StatelessWidget {
       child: Container(
         decoration: BoxDecoration(
           borderRadius: BorderRadius.all(
-             Radius.circular(context.radius.xxxl),
+            Radius.circular(context.radius.xxxl),
           ),
           color: DugColors.white,
           border: Border.all(color: DugColors.greyTextCard),
@@ -25,7 +36,8 @@ class HousingCard extends StatelessWidget {
               color: Colors.grey.withOpacity(0.5), // Color de la sombra
               spreadRadius: 2, // Cuán extendida estará la sombra
               blurRadius: 5, // Cuán desenfocada estará la sombra
-              offset: const Offset(5, 3), // Offset de la sombra (horizontal, vertical)
+              offset: const Offset(
+                  5, 3), // Offset de la sombra (horizontal, vertical)
             ),
           ],
         ),
@@ -49,7 +61,9 @@ class HousingCard extends StatelessWidget {
                   Text('4.5'),
                 ],
               ),
-              SizedBox(height: 25,),
+              SizedBox(
+                height: 25,
+              ),
               Text(
                 'Ubicación',
                 style: TextStyle(
@@ -57,22 +71,29 @@ class HousingCard extends StatelessWidget {
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              SizedBox(height: 10,),
+              SizedBox(
+                height: 10,
+              ),
               Row(
                 children: [
                   Icon(
                     Icons.location_on,
                     color: DugColors.blue,
                   ),
-                  Text(
-                    'Carrera 1 E #19a - 70',
-                    style: TextStyle(
-                      fontSize: context.text.size.sm,
+                  Container(
+                    width: 250,
+                    child: Text(
+                      location,
+                      style: TextStyle(
+                        fontSize: context.text.size.sm,
+                      ),
                     ),
                   ),
                 ],
               ),
-              SizedBox(height: 25,),
+              SizedBox(
+                height: 25,
+              ),
               Text(
                 'Precios',
                 style: TextStyle(
@@ -80,7 +101,9 @@ class HousingCard extends StatelessWidget {
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              SizedBox(height: 10,),
+              SizedBox(
+                height: 10,
+              ),
               Row(
                 children: [
                   Column(
@@ -92,7 +115,9 @@ class HousingCard extends StatelessWidget {
                           fontSize: context.text.size.xxs,
                         ),
                       ),
-                      SizedBox(height: 5,),
+                      SizedBox(
+                        height: 5,
+                      ),
                       Row(
                         children: [
                           Icon(
@@ -100,7 +125,7 @@ class HousingCard extends StatelessWidget {
                             color: DugColors.blue,
                           ),
                           Text(
-                            '\$40-60 mil ',
+                            '\$$pricePerNight',
                             style: TextStyle(
                               fontSize: context.text.size.sm,
                             ),
@@ -109,7 +134,9 @@ class HousingCard extends StatelessWidget {
                       ),
                     ],
                   ),
-                  SizedBox(width: 40,),
+                  SizedBox(
+                    width: 40,
+                  ),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -119,7 +146,9 @@ class HousingCard extends StatelessWidget {
                           fontSize: context.text.size.xxs,
                         ),
                       ),
-                      SizedBox(height: 5,),
+                      SizedBox(
+                        height: 5,
+                      ),
                       Row(
                         children: [
                           Icon(
@@ -127,7 +156,7 @@ class HousingCard extends StatelessWidget {
                             color: DugColors.blue,
                           ),
                           Text(
-                            '\$40-60 mil ',
+                            '\$$pricePerHour',
                             style: TextStyle(
                               fontSize: context.text.size.sm,
                             ),
@@ -138,7 +167,9 @@ class HousingCard extends StatelessWidget {
                   ),
                 ],
               ),
-              SizedBox(height: 25,),
+              SizedBox(
+                height: 25,
+              ),
               Text(
                 'Macotas',
                 style: TextStyle(
@@ -146,7 +177,9 @@ class HousingCard extends StatelessWidget {
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              SizedBox(height: 10,),
+              SizedBox(
+                height: 10,
+              ),
               Row(
                 children: [
                   Column(
@@ -158,7 +191,9 @@ class HousingCard extends StatelessWidget {
                           fontSize: context.text.size.xxs,
                         ),
                       ),
-                      SizedBox(height: 5,),
+                      SizedBox(
+                        height: 5,
+                      ),
                       Row(
                         children: [
                           Icon(
@@ -166,7 +201,7 @@ class HousingCard extends StatelessWidget {
                             color: DugColors.blue,
                           ),
                           Text(
-                            '1 perro y 1 gato',
+                            '$ownDogs perro(s)',
                             style: TextStyle(
                               fontSize: context.text.size.sm,
                             ),
@@ -175,7 +210,9 @@ class HousingCard extends StatelessWidget {
                       ),
                     ],
                   ),
-                  SizedBox(width: 40,),
+                  SizedBox(
+                    width: 40,
+                  ),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -185,7 +222,9 @@ class HousingCard extends StatelessWidget {
                           fontSize: context.text.size.xxs,
                         ),
                       ),
-                      SizedBox(height: 5,),
+                      SizedBox(
+                        height: 5,
+                      ),
                       Row(
                         children: [
                           Icon(
@@ -193,7 +232,7 @@ class HousingCard extends StatelessWidget {
                             color: DugColors.blue,
                           ),
                           Text(
-                            '0 perros',
+                            '$housingDogs perro(s)',
                             style: TextStyle(
                               fontSize: context.text.size.sm,
                             ),

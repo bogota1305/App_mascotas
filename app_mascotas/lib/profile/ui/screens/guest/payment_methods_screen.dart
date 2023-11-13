@@ -1,6 +1,7 @@
 import 'package:app_mascotas/extensions/dimension_extension.dart';
 import 'package:app_mascotas/extensions/radius_extension.dart';
 import 'package:app_mascotas/home/ui/widgets/app_bar_dug.dart';
+import 'package:app_mascotas/login/controller/loged_user_controller.dart';
 import 'package:app_mascotas/reservation/ui/widgets/housing_tipe_card_content.dart';
 import 'package:app_mascotas/reservation/ui/widgets/payment_card_content.dart';
 import 'package:app_mascotas/reservation/ui/widgets/price_card_content.dart';
@@ -12,6 +13,9 @@ import 'package:app_mascotas/theme/text/text_size.dart';
 import 'package:flutter/material.dart';
 
 class PaymentMethodsScreen extends StatefulWidget {
+  final LogedUserController logedUserController;
+
+  const PaymentMethodsScreen({super.key, required this.logedUserController});
   @override
   State<PaymentMethodsScreen> createState() => _PaymentMethodsScreenState();
 }
@@ -31,7 +35,8 @@ class _PaymentMethodsScreenState extends State<PaymentMethodsScreen> {
               fontSize: context.text.size.md,
               fontWeight: FontWeight.bold,
             ),
-          ),
+          ), 
+          logedUserController: widget.logedUserController,
         ),
         backgroundColor: DugColors.blue,
       ),

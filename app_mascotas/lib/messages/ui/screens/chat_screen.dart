@@ -1,11 +1,17 @@
 import 'package:app_mascotas/extensions/dimension_extension.dart';
 import 'package:app_mascotas/extensions/radius_extension.dart';
 import 'package:app_mascotas/home/ui/widgets/app_bar_dug.dart';
+import 'package:app_mascotas/login/controller/loged_user_controller.dart';
 import 'package:app_mascotas/theme/colors/dug_colors.dart';
 import 'package:app_mascotas/theme/text/text_size.dart';
 import 'package:flutter/material.dart';
 
 class ChatScreen extends StatelessWidget {
+
+  final LogedUserController logedUserController;
+
+  const ChatScreen({super.key, required this.logedUserController});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -30,6 +36,7 @@ class ChatScreen extends StatelessWidget {
               ),
             ],
           ),
+          logedUserController: logedUserController,
         ),
         backgroundColor: DugColors.blue,
       ),

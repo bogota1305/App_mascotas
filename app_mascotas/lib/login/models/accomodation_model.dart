@@ -1,5 +1,4 @@
 import 'package:app_mascotas/login/models/localization_model.dart';
-import 'package:app_mascotas/login/models/user_model.dart';
 
 class Accommodation {
   String? id;
@@ -9,6 +8,11 @@ class Accommodation {
   double precioPorNoche;
   double precioPorHora;
   String idUser;
+  String tipoDeServicio;
+  DateTime diaInicioDisponibilidad;
+  DateTime diaFinDisponibilidad;
+  int horaInicioDisponibilidad;
+  int horaFinDisponibilidad;
 
   Accommodation({
     this.id,
@@ -18,17 +22,27 @@ class Accommodation {
     required this.precioPorNoche,
     required this.precioPorHora,
     required this.idUser,
+    required this.tipoDeServicio,
+    required this.diaInicioDisponibilidad,
+    required this.diaFinDisponibilidad,
+    required this.horaInicioDisponibilidad,
+    required this.horaFinDisponibilidad,
   });
 
   factory Accommodation.fromJson(Map<String, dynamic> json) {
     return Accommodation(
       id: json['id'] ?? '',
       photos: List<String>.from(json['photos'] ?? []),
-      ubicacion: json['ubicacion'] != null ? Localization.fromJson(json['ubicacion']) : Localization(ciudad: 'ciudad', direccion: 'direccion', indicacionesEspeciales: 'indicacionesEspeciales'), // TODO
+      ubicacion: json['ubicacion'] != null ? Localization.fromJson(json['ubicacion']) : Localization(ciudad: 'ciudad', direccion: 'direccion', indicacionesEspeciales: 'indicacionesEspeciales', latitud: 0, longitud: 0), // TODO
       descripcionEspacio: json['descripcionEspacio'] ?? '',
       precioPorNoche: json['precioPorNoche'].toDouble() ?? '',
       precioPorHora: json['precioPorHora'].toDouble() ?? '',
-      idUser: json['idUser'] ?? '', // TODO
+      idUser: json['idUser'] ?? '',
+      tipoDeServicio: json['tipoDeServicio'] ?? '',
+      diaInicioDisponibilidad: DateTime.parse(json['diaInicioDisponibilidad'] ?? ''),
+      diaFinDisponibilidad: DateTime.parse(json['diaFinDisponibilidad'] ?? ''),
+      horaInicioDisponibilidad: json['horaInicioDisponibilidad'] ?? 0,
+      horaFinDisponibilidad: json['horaFinDisponibilidad'] ?? 0,
     );
   }
 
@@ -39,7 +53,12 @@ class Accommodation {
       'descripcionEspacio': descripcionEspacio,
       'precioPorNoche': precioPorNoche,
       'precioPorHora': precioPorHora,
-      'user': idUser,
+      'idUser': idUser,
+      'tipoDeServicio': tipoDeServicio,
+      'diaInicioDisponibilidad': diaInicioDisponibilidad.toIso8601String(),
+      'diaFinDisponibilidad': diaFinDisponibilidad.toIso8601String(),
+      'horaInicioDisponibilidad': horaInicioDisponibilidad,
+      'horaFinDisponibilidad': horaFinDisponibilidad,
     };
   }
 
@@ -51,6 +70,11 @@ class Accommodation {
     double? precioPorNoche,
     double? precioPorHora,
     String? idUser,
+    String? tipoDeServicio,
+    DateTime? diaInicioDisponibilidad,
+    DateTime? diaFinDisponibilidad,
+    int? horaInicioDisponibilidad,
+    int? horaFinDisponibilidad,
   }) {
     return Accommodation(
       id: id ?? this.id,
@@ -60,6 +84,11 @@ class Accommodation {
       precioPorNoche: precioPorNoche ?? this.precioPorNoche,
       precioPorHora: precioPorHora ?? this.precioPorHora,
       idUser: idUser ?? this.idUser,
+      tipoDeServicio: tipoDeServicio ?? this.tipoDeServicio,
+      diaInicioDisponibilidad: diaInicioDisponibilidad ?? this.diaInicioDisponibilidad,
+      diaFinDisponibilidad: diaFinDisponibilidad ?? this.diaFinDisponibilidad,
+      horaInicioDisponibilidad: horaInicioDisponibilidad ?? this.horaInicioDisponibilidad,
+      horaFinDisponibilidad: horaFinDisponibilidad ?? this.horaFinDisponibilidad,
     );
   }
 }

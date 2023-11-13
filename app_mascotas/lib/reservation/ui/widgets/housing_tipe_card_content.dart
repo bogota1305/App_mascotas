@@ -5,17 +5,29 @@ import 'package:app_mascotas/theme/text/text_size.dart';
 import 'package:flutter/material.dart';
 
 class HousingTipeCardContent extends StatelessWidget {
+  final String tipoReserva;
+  final DateTime inicioDiaReserva;
+  final DateTime finDiaReserva;
+  final int inicioHoraReserva;
+  final int finHoraReserva;
+
   const HousingTipeCardContent({
     super.key,
+    required this.tipoReserva,
+    required this.inicioDiaReserva,
+    required this.finDiaReserva,
+    required this.inicioHoraReserva,
+    required this.finHoraReserva,
   });
 
   @override
   Widget build(BuildContext context) {
+    String serviceRange = getServiceRange();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Tipo de estadia: Horas',
+          'Tipo de estadia: $tipoReserva',
           style: TextStyle(
             fontSize: context.text.size.md,
             fontWeight: FontWeight.bold,
@@ -26,11 +38,11 @@ class HousingTipeCardContent extends StatelessWidget {
         ),
         Row(
           children: [
-            Icon(Icons.access_time_outlined, color: DugColors.blue),
+            Icon(tipoReserva == 'Hora' ? Icons.access_time_outlined : Icons.date_range_rounded, color: DugColors.blue),
             SizedBox(
               width: context.spacing.xxxs,
             ),
-            Text('14:00 - 19:00    Sep 22'),
+            Text(serviceRange),
             Spacer(),
             Container(
               decoration: BoxDecoration(
@@ -40,7 +52,9 @@ class HousingTipeCardContent extends StatelessWidget {
                 color: DugColors.blue,
               ),
               child: Padding(
-                padding: EdgeInsets.symmetric(vertical: context.spacing.xxs, horizontal: context.spacing.sm),
+                padding: EdgeInsets.symmetric(
+                    vertical: context.spacing.xxs,
+                    horizontal: context.spacing.sm),
                 child: Text(
                   'Editar',
                   style: TextStyle(
@@ -54,5 +68,15 @@ class HousingTipeCardContent extends StatelessWidget {
         ),
       ],
     );
+  }
+  
+  String getServiceRange() {
+    String service = '';
+    if(tipoReserva == 'Hora'){
+      service = '$inicioHoraReserva:00 - $finHoraReserva:00 ${DateTime.now().day}/${DateTime.now().month}';
+    } else {
+      service = '${inicioDiaReserva.day}/${inicioDiaReserva.month} - ${finDiaReserva.day}/${finDiaReserva.month}';
+    }
+    return service;
   }
 }

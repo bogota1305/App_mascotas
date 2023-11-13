@@ -5,8 +5,17 @@ import 'package:app_mascotas/theme/text/text_size.dart';
 import 'package:flutter/material.dart';
 
 class HosingProfileCard extends StatelessWidget {
+  final String name;
+  final String image;
+  final String description;
+  final double rating;
+
   const HosingProfileCard({
     super.key,
+    required this.name,
+    required this.image,
+    required this.description,
+    required this.rating,
   });
 
   @override
@@ -25,7 +34,8 @@ class HosingProfileCard extends StatelessWidget {
               color: Colors.grey.withOpacity(0.5), // Color de la sombra
               spreadRadius: 2, // Cuán extendida estará la sombra
               blurRadius: 5, // Cuán desenfocada estará la sombra
-              offset: const Offset(5, 3), // Offset de la sombra (horizontal, vertical)
+              offset: const Offset(
+                  5, 3), // Offset de la sombra (horizontal, vertical)
             ),
           ],
         ),
@@ -39,7 +49,9 @@ class HosingProfileCard extends StatelessWidget {
                 height: 175,
                 width: 125,
               ),
-              SizedBox(width: 15,),
+              SizedBox(
+                width: 15,
+              ),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -47,19 +59,23 @@ class HosingProfileCard extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        'David',
+                        name,
                         style: TextStyle(
                           fontSize: context.text.size.md,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      SizedBox(width: 20,),
+                      SizedBox(
+                        width: 20,
+                      ),
                       Icon(Icons.star),
-                      Text('4.5'),
+                      Text(rating.toString()),
                     ],
                   ),
-                  SizedBox(height: 15,),
-                  Text('Descripción')
+                  SizedBox(
+                    height: 15,
+                  ),
+                  Text(description)
                 ],
               )
             ],

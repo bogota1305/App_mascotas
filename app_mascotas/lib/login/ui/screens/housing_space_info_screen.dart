@@ -1,9 +1,16 @@
+import 'dart:convert';
+
 import 'package:app_mascotas/extensions/dimension_extension.dart';
 import 'package:app_mascotas/extensions/radius_extension.dart';
+import 'package:app_mascotas/home/controller/map_controller.dart';
+import 'package:app_mascotas/home/ui/screens/principal_screen.dart';
 import 'package:app_mascotas/home/ui/widgets/app_bar_dug.dart';
+import 'package:app_mascotas/login/controller/loged_user_controller.dart';
 import 'package:app_mascotas/login/models/accomodation_model.dart';
 import 'package:app_mascotas/login/models/localization_model.dart';
 import 'package:app_mascotas/login/models/user_model.dart';
+import 'package:app_mascotas/login/repository/accommodation_registration_repository.dart';
+import 'package:app_mascotas/login/repository/user_registration_repository.dart';
 import 'package:app_mascotas/login/ui/screens/housing_profile_creation_screen.dart';
 import 'package:app_mascotas/login/ui/screens/user_personal_info_screen.dart';
 import 'package:app_mascotas/theme/colors/dug_colors.dart';
@@ -13,11 +20,17 @@ import 'package:app_mascotas/widgets/textFields/registration_text_box.dart';
 import 'package:flutter/material.dart';
 import 'dart:io';
 import 'package:image_picker/image_picker.dart';
+import 'package:http/http.dart' as http;
 
 class HousingSpaceInfo extends StatefulWidget {
   final User user;
+  final LogedUserController logedUserController;
 
-  const HousingSpaceInfo({super.key, required this.user});
+  const HousingSpaceInfo({
+    super.key,
+    required this.user,
+    required this.logedUserController,
+  });
   @override
   _HousingSpaceInfoState createState() => _HousingSpaceInfoState();
 }
@@ -31,12 +44,21 @@ class _HousingSpaceInfoState extends State<HousingSpaceInfo> {
   bool offerHourlyService = false;
   double pricePerNight = 0.0;
   double pricePerHour = 0.0;
+  String errorMessage = '';
+  List<String> suggestions = [];
 
   // Controladores para los campos de entrada de texto
   final addressController = TextEditingController();
   final descriptionController = TextEditingController();
   final pricePerNightController = TextEditingController();
   final pricePerHourController = TextEditingController();
+
+  final UserRegistrationRepository userRegistrationRepository =
+      UserRegistrationRepository();
+  final AccommodationsRegistrationRepository
+      accommodationsRegistrationRepository =
+      AccommodationsRegistrationRepository();
+  final MapController mapController = MapController();
 
   @override
   Widget build(BuildContext context) {
@@ -50,7 +72,8 @@ class _HousingSpaceInfoState extends State<HousingSpaceInfo> {
               fontSize: context.text.size.md,
               fontWeight: FontWeight.bold,
             ),
-          ),
+          ), 
+          logedUserController: widget.logedUserController,
         ),
         backgroundColor: DugColors.blue,
       ),
@@ -92,22 +115,41 @@ class _HousingSpaceInfoState extends State<HousingSpaceInfo> {
             ),
             SizedBox(height: 16.0),
             buildSelectedImages(),
-            RegistrationTextBox(
-              title: 'Dirección',
-              textBox: TextField(
-                controller: addressController,
-                decoration: InputDecoration(
-                  labelText: 'Dirección',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(context.radius.xxxl),
+            Column(
+              children: [
+                TextField(
+                  controller: addressController,
+                  decoration: InputDecoration(
+                    labelText: 'Dirección',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(context.radius.xxxl),
+                    ),
                   ),
+                  onChanged: (value) {
+                    setState(() {
+                      address = value;
+                      getSuggestions();
+                    });
+                  },
                 ),
-                onChanged: (value) {
-                  setState(() {
-                    address = value;
-                  });
-                },
-              ),
+                SizedBox(height: 10),
+                if (suggestions.isNotEmpty)
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: suggestions
+                        .map((suggestion) => ListTile(
+                              title: Text(suggestion),
+                              onTap: () {
+                                addressController.text = suggestion;
+                                setState(() {
+                                  address = suggestion;
+                                  suggestions = [];
+                                });
+                              },
+                            ))
+                        .toList(),
+                  ),
+              ],
             ),
             SizedBox(height: 16.0),
             RegistrationTextBox(
@@ -211,31 +253,6 @@ class _HousingSpaceInfoState extends State<HousingSpaceInfo> {
     );
   }
 
-  void onTapAccomodationButton(BuildContext context) {
-    Accommodation accommodation = Accommodation(
-      photos: accommodationImages,
-      ubicacion: Localization(
-        ciudad: 'Bogotá',
-        direccion: address,
-        indicacionesEspeciales: '',
-      ),
-      descripcionEspacio: description,
-      precioPorNoche: pricePerNight,
-      precioPorHora: pricePerHour,
-      idUser: widget.user.id ?? '',
-    );
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => HousingProfileCreationScreen(
-          user: widget.user.copyWith(
-            alojamiento: accommodation,
-          ),
-          accommodation: accommodation,
-        ), // La siguiente pantalla
-      ),
-    );
-  }
-
   Future<List<String>> pickImages() async {
     final picker = ImagePicker();
     List<String> imagePaths = [];
@@ -296,5 +313,111 @@ class _HousingSpaceInfoState extends State<HousingSpaceInfo> {
         );
       },
     );
+  }
+
+  Future<void> onTapAccomodationButton(BuildContext context) async {
+    final geocodedData = await mapController.geocodeAddress(address);
+    final double latitude = mapController.getLatitude(geocodedData);
+    final double longitude = mapController.getLongitude(geocodedData);
+    String userId = '${widget.user.pais}${widget.user.documento}';
+    Accommodation accommodation = Accommodation(
+      id: '${userId}_Accommodation',
+      photos: accommodationImages,
+      ubicacion: Localization(
+        ciudad: 'Bogotá',
+        direccion: address,
+        indicacionesEspeciales: '',
+        latitud: latitude,
+        longitud: longitude,
+      ),
+      descripcionEspacio: description,
+      precioPorNoche: pricePerNight,
+      precioPorHora: pricePerHour,
+      idUser: userId,
+      tipoDeServicio: '',
+      diaInicioDisponibilidad: DateTime.now(),
+      diaFinDisponibilidad: DateTime.now(),
+      horaFinDisponibilidad: 0,
+      horaInicioDisponibilidad: 0,
+    );
+
+    User updateUser = widget.user.copyWith(
+        alojamiento: accommodation,
+      );
+
+    accommodationsRegistrationRepository.registerAccommodations(
+      context,
+      accommodation,
+    );
+    userRegistrationRepository.updateUser(
+      context,
+      userId,
+      updateUser,
+    );
+
+    widget.logedUserController.user = updateUser;
+
+    if (areAllFieldsFilled()) {
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (context) => PrincipalScreen(
+            housingUser: true,
+            logedUserController: widget.logedUserController,
+          ), // La siguiente pantalla
+        ),
+      );
+    } else {
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text('Error'),
+          content: Text('Completa todos los campos'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: Text('Aceptar'),
+            ),
+          ],
+        ),
+      );
+    }
+  }
+
+  bool areAllFieldsFilled() {
+    return accommodationImages.isNotEmpty &&
+        address.isNotEmpty &&
+        description.isNotEmpty &&
+        (offerNightService || offerHourlyService) &&
+        (pricePerNight > 0 || pricePerHour > 0);
+  }
+
+  void getSuggestions() async {
+    try {
+      final response = await http.get(
+        Uri.parse(
+          'https://maps.googleapis.com/maps/api/place/autocomplete/json?input=$address&key=AIzaSyCW7oQvJj05PXKlLMoZ_3QJHiFSfavbC4c',
+        ),
+      );
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        if (data['status'] == 'OK') {
+          // Procesa las sugerencias y muestra las opciones al usuario
+          final predictions = data['predictions'] as List<dynamic>;
+          final suggestionList = predictions.map<String>((prediction) {
+            return prediction['description'];
+          }).toList();
+          setState(() {
+            suggestions = suggestionList;
+          });
+        }
+      } else {
+        throw Exception('Error al obtener sugerencias de direcciones');
+      }
+    } catch (e) {
+      print('Error al obtener sugerencias de direcciones: $e');
+    }
   }
 }

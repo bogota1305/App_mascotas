@@ -1,11 +1,15 @@
 import 'package:app_mascotas/extensions/dimension_extension.dart';
 import 'package:app_mascotas/extensions/radius_extension.dart';
+import 'package:app_mascotas/login/controller/loged_user_controller.dart';
 import 'package:app_mascotas/messages/ui/screens/chat_screen.dart';
 import 'package:app_mascotas/theme/colors/dug_colors.dart';
 import 'package:app_mascotas/theme/text/text_size.dart';
 import 'package:flutter/material.dart';
 
 class MessageScreen extends StatelessWidget {
+  final LogedUserController logedUserController;
+
+  const MessageScreen({super.key, required this.logedUserController});
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
@@ -17,9 +21,11 @@ class MessageScreen extends StatelessWidget {
         ),
         MessageCard(
           active: true,
+          logedUserController: logedUserController,
         ),
         MessageCard(
           active: false,
+          logedUserController: logedUserController,
         ),
       ],
     ));
@@ -28,10 +34,11 @@ class MessageScreen extends StatelessWidget {
 
 class MessageCard extends StatelessWidget {
   final bool active;
-
+  final LogedUserController logedUserController;
   const MessageCard({
     super.key,
     required this.active,
+    required this.logedUserController,
   });
 
   @override
@@ -41,7 +48,11 @@ class MessageCard extends StatelessWidget {
           vertical: context.spacing.xs, horizontal: context.spacing.md),
       child: InkWell(
         onTap: () => Navigator.push(
-            context, MaterialPageRoute(builder: (context) => ChatScreen())),
+            context,
+            MaterialPageRoute(
+                builder: (context) => ChatScreen(
+                      logedUserController: logedUserController,
+                    ))),
         child: Container(
             height: 105,
             decoration: BoxDecoration(

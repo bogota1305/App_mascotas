@@ -1,12 +1,19 @@
 import 'package:app_mascotas/extensions/dimension_extension.dart';
 import 'package:app_mascotas/extensions/radius_extension.dart';
+import 'package:app_mascotas/login/models/accomodation_model.dart';
+import 'package:app_mascotas/login/models/user_model.dart';
 import 'package:app_mascotas/theme/colors/dug_colors.dart';
 import 'package:app_mascotas/theme/text/text_size.dart';
 import 'package:flutter/material.dart';
 
 class ResumeReservationProfileCard extends StatelessWidget {
+  final User user;
+  final Accommodation alojamiento;
+
   const ResumeReservationProfileCard({
     super.key,
+    required this.user,
+    required this.alojamiento,
   });
 
   @override
@@ -25,7 +32,8 @@ class ResumeReservationProfileCard extends StatelessWidget {
               color: Colors.grey.withOpacity(0.5), // Color de la sombra
               spreadRadius: 2, // Cuán extendida estará la sombra
               blurRadius: 5, // Cuán desenfocada estará la sombra
-              offset: const Offset(5, 3), // Offset de la sombra (horizontal, vertical)
+              offset: const Offset(
+                  5, 3), // Offset de la sombra (horizontal, vertical)
             ),
           ],
         ),
@@ -36,13 +44,13 @@ class ResumeReservationProfileCard extends StatelessWidget {
             children: [
               Container(
                 decoration: BoxDecoration(
-                  color: DugColors.blue,
-                  shape: BoxShape.circle
-                ),
+                    color: DugColors.blue, shape: BoxShape.circle),
                 width: 100,
                 height: 100,
               ),
-              SizedBox(width: 15,),
+              SizedBox(
+                width: 15,
+              ),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -50,33 +58,52 @@ class ResumeReservationProfileCard extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        'David',
+                        user.nombre,
                         style: TextStyle(
                           fontSize: context.text.size.md,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      SizedBox(width: 20,),
+                      SizedBox(
+                        width: 20,
+                      ),
                       Icon(Icons.star),
-                      Text('4.5'),
+                      Text(user.calificacionPromedio.toString()),
                     ],
                   ),
-                  SizedBox(height: 15,),
+                  SizedBox(
+                    height: 15,
+                  ),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Icon(Icons.location_on, color: DugColors.blue),
-                      SizedBox(width: 5,),
-                      Text('Carrera 1 E #19a - 70'),
+                      SizedBox(
+                        width: 5,
+                      ),
+                      Container(
+                        width: 150,
+                        child: Text(
+                          alojamiento.ubicacion.direccion,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
                     ],
                   ),
-                  SizedBox(height: 15,),
+                  SizedBox(
+                    height: 15,
+                  ),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Icon(Icons.pets, color: DugColors.blue,),
-                      SizedBox(width: 5,),
-                      Text('2 Mascotas en casa'),
+                      Icon(
+                        Icons.pets,
+                        color: DugColors.blue,
+                      ),
+                      SizedBox(
+                        width: 5,
+                      ),
+                      Text('${user.perros?.length ?? 0} Mascotas en casa'),
                     ],
                   ),
                 ],

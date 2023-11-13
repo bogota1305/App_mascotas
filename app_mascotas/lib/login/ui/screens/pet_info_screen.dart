@@ -1,7 +1,8 @@
 import 'package:app_mascotas/extensions/dimension_extension.dart';
 import 'package:app_mascotas/extensions/radius_extension.dart';
 import 'package:app_mascotas/home/ui/widgets/app_bar_dug.dart';
-import 'package:app_mascotas/login/models/dod_model.dart';
+import 'package:app_mascotas/login/controller/loged_user_controller.dart';
+import 'package:app_mascotas/login/models/dog_model.dart';
 import 'package:app_mascotas/login/models/user_model.dart';
 import 'package:app_mascotas/login/ui/screens/housing_space_info_screen.dart';
 import 'package:app_mascotas/login/ui/screens/owner_profile_creation_screen.dart';
@@ -16,8 +17,13 @@ import 'dart:io';
 
 class PetInfoScreen extends StatefulWidget {
   final User user;
+  final LogedUserController logedUserController;
 
-  const PetInfoScreen({super.key, required this.user});
+  const PetInfoScreen({
+    super.key,
+    required this.user,
+    required this.logedUserController,
+  });
 
   @override
   _PetInfoScreenState createState() => _PetInfoScreenState();
@@ -30,7 +36,6 @@ class _PetInfoScreenState extends State<PetInfoScreen> {
   String breed = '';
   String personalityBehavior = '';
   String gender = 'Masculino'; // Valor predeterminado
-  String prefixCellphone = '';
   List<String> imagePaths = []; // Lista de rutas de imágenes seleccionadas
   bool hasSpecialCares = false;
   String specialCares = '';
@@ -39,7 +44,6 @@ class _PetInfoScreenState extends State<PetInfoScreen> {
   final firstNameController = TextEditingController();
   final breedController = TextEditingController();
   final personalityBehaviorController = TextEditingController();
-  final prefixCellphoneController = TextEditingController();
   final specialCaresController = TextEditingController();
 
   @override
@@ -48,7 +52,6 @@ class _PetInfoScreenState extends State<PetInfoScreen> {
     firstNameController.dispose();
     breedController.dispose();
     personalityBehaviorController.dispose();
-    prefixCellphoneController.dispose();
     super.dispose();
   }
 
@@ -78,6 +81,7 @@ class _PetInfoScreenState extends State<PetInfoScreen> {
               fontWeight: FontWeight.bold,
             ),
           ),
+          logedUserController: widget.logedUserController,
         ),
         backgroundColor: DugColors.green,
       ),
@@ -321,7 +325,25 @@ class _PetInfoScreenState extends State<PetInfoScreen> {
             SizedBox(height: 80.0),
             PrincipalButton(
               onPressed: () {
-                onTapRegistrationButton(context);
+                if (areAllFieldsFilled()) {
+                  onTapRegistrationButton(context);
+                } else {
+                  showDialog(
+                    context: context,
+                    builder: (context) => AlertDialog(
+                      title: Text('Error'),
+                      content: Text('Completa todos los campos del formulario'),
+                      actions: [
+                        TextButton(
+                          onPressed: () {
+                            Navigator.of(context).pop();
+                          },
+                          child: Text('Aceptar'),
+                        ),
+                      ],
+                    ),
+                  );
+                }
               },
               text: 'Enviar Registro',
               backgroundColor: DugColors.green,
@@ -334,22 +356,35 @@ class _PetInfoScreenState extends State<PetInfoScreen> {
   }
 
   void onTapRegistrationButton(BuildContext context) {
+    String userId = '${widget.user.pais}${widget.user.documento}';
+    int dogNumber = (widget.user.perros?.length ?? 0) + 1;
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (context) => PetProfileCreationScreen(
           user: widget.user,
           dog: Dog(
+            id: '${userId}_Dog_$dogNumber',
             nombre: firstName,
             fechaNacimiento: birthDate ?? DateTime.now(),
             raza: breed,
             personalidad: personalityBehavior,
             cuidadosEspeciales: specialCares,
             sexo: gender,
-            idUser: widget.user.id ?? '',
+            idUser: userId,
             photos: imagePaths,
           ),
+          logedUserController: widget.logedUserController,
         ), // La siguiente pantalla
       ),
     );
+  }
+
+  bool areAllFieldsFilled() {
+    return firstName.isNotEmpty &&
+        birthDate != null &&
+        breed.isNotEmpty &&
+        personalityBehavior.isNotEmpty &&
+        gender.isNotEmpty &&
+        imagePaths.isNotEmpty;
   }
 }

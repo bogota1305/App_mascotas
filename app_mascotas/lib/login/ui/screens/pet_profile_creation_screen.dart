@@ -4,7 +4,8 @@ import 'package:app_mascotas/extensions/dimension_extension.dart';
 import 'package:app_mascotas/extensions/radius_extension.dart';
 import 'package:app_mascotas/home/ui/screens/principal_screen.dart';
 import 'package:app_mascotas/home/ui/widgets/app_bar_dug.dart';
-import 'package:app_mascotas/login/models/dod_model.dart';
+import 'package:app_mascotas/login/controller/loged_user_controller.dart';
+import 'package:app_mascotas/login/models/dog_model.dart';
 import 'package:app_mascotas/login/models/user_model.dart';
 import 'package:app_mascotas/login/repository/dog_registration_repository.dart';
 import 'package:app_mascotas/login/repository/user_registration_repository.dart';
@@ -18,9 +19,14 @@ import 'package:image_picker/image_picker.dart';
 class PetProfileCreationScreen extends StatefulWidget {
   final User user;
   final Dog dog;
+  final LogedUserController logedUserController;
 
-  const PetProfileCreationScreen(
-      {super.key, required this.user, required this.dog});
+  const PetProfileCreationScreen({
+    super.key,
+    required this.user,
+    required this.dog,
+    required this.logedUserController,
+  });
   @override
   _PetProfileCreationScreenState createState() =>
       _PetProfileCreationScreenState();
@@ -57,6 +63,7 @@ class _PetProfileCreationScreenState extends State<PetProfileCreationScreen> {
               fontWeight: FontWeight.bold,
             ),
           ),
+          logedUserController: widget.logedUserController,
         ),
         backgroundColor: DugColors.green,
       ),
@@ -191,22 +198,51 @@ class _PetProfileCreationScreenState extends State<PetProfileCreationScreen> {
   }
 
   void onTapProfileButton(BuildContext context) {
-    Dog dogUpdated = widget.dog.copyWith(personalidad: description, photos: profileImages);
+    String userId = '${widget.user.pais}${widget.user.documento}';
+    Dog dogUpdated =
+        widget.dog.copyWith(personalidad: description, photos: profileImages);
     dogs.add(dogUpdated);
+    User userUpdated = widget.user.copyWith(perros: dogs);
 
-    userRegistrationRepository.registerUser(
+    userRegistrationRepository.updateUser(
       context,
-      widget.user.copyWith(perros: dogs),
+      userId,
+      userUpdated,
     );
-    
+
     dogRegistrationRepository.registerDog(context, dogUpdated);
 
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => PrincipalScreen(
-          housingUser: false,
-        ), // La siguiente pantalla
-      ),
-    );
+    widget.logedUserController.user = userUpdated;
+
+    if (areAllFieldsFilled()) {
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (context) => PrincipalScreen(
+            housingUser: false,
+            logedUserController: widget.logedUserController,
+          ), // La siguiente pantalla
+        ),
+      );
+    } else {
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text('Error'),
+          content: Text('Completa todos los campos'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: Text('Aceptar'),
+            ),
+          ],
+        ),
+      );
+    }
+  }
+
+  bool areAllFieldsFilled() {
+    return description.isNotEmpty && profileImages.isNotEmpty;
   }
 }

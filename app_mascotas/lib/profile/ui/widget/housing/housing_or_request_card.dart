@@ -1,38 +1,48 @@
 import 'package:app_mascotas/extensions/dimension_extension.dart';
 import 'package:app_mascotas/extensions/radius_extension.dart';
-import 'package:app_mascotas/login/models/dod_model.dart';
+import 'package:app_mascotas/home/controller/map_controller.dart';
+import 'package:app_mascotas/login/controller/loged_user_controller.dart';
+import 'package:app_mascotas/login/models/accomodation_model.dart';
+import 'package:app_mascotas/login/models/dog_model.dart';
+import 'package:app_mascotas/login/models/user_model.dart';
 import 'package:app_mascotas/profile/ui/screens/guest/guest_profile_screen.dart';
 import 'package:app_mascotas/profile/ui/screens/housing/housing_profile_screen.dart';
+import 'package:app_mascotas/reservation/models/request_controller.dart';
 import 'package:app_mascotas/theme/colors/dug_colors.dart';
 import 'package:app_mascotas/theme/text/text_size.dart';
 import 'package:flutter/material.dart';
+import 'package:time/time.dart';
 
 class HousingOrRequestCard extends StatefulWidget {
-  final String name;
-  final String image;
   final bool housing;
   final bool favorite;
-  final String? petName;
-  final String? petImage;
-  final String location;
-  final String pricePerNight;
-  final String pricePerHour;
+  final User user;
+  final Accommodation alojamiento;
   final List<Dog> perros;
-  final double rating;
+  final String tipoReserva;
+  final DateTime inicioDiaReserva;
+  final DateTime finDiaReserva;
+  final int inicioHoraReserva;
+  final int finHoraReserva;
+  final String distancia;
+  final LogedUserController logedUserController;
+  final RequestModel? housingRequest;
 
   HousingOrRequestCard({
     super.key,
-    required this.name,
-    required this.image,
     required this.housing,
     required this.favorite,
-    this.petName,
-    this.petImage,
-    required this.location,
-    required this.pricePerNight,
-    required this.pricePerHour,
     required this.perros,
-    required this.rating,
+    required this.user,
+    required this.alojamiento,
+    required this.tipoReserva,
+    required this.inicioDiaReserva,
+    required this.finDiaReserva,
+    required this.inicioHoraReserva,
+    required this.finHoraReserva,
+    required this.distancia,
+    required this.logedUserController, 
+    this.housingRequest,
   });
 
   @override
@@ -41,21 +51,61 @@ class HousingOrRequestCard extends StatefulWidget {
 
 class _HousingOrRequestCardState extends State<HousingOrRequestCard> {
   bool petView = true;
+  final MapController mapController = MapController();
 
   @override
   Widget build(BuildContext context) {
+    final Dog firstDog = !widget.housing
+        ? widget.perros.first
+        : Dog(
+            nombre: '',
+            fechaNacimiento: DateTime.now(),
+            raza: '',
+            personalidad: '',
+            cuidadosEspeciales: '',
+            sexo: '',
+            idUser: '',
+            photos: [],
+          );
+    final String name = widget.user.nombre;
+    final String image =
+        widget.user.fotos.isNotEmpty ? widget.user.fotos.first : '';
+    final String description = widget.user.descripcion;
+    final String location = widget.distancia;
+    final String pricePerNight =
+        widget.alojamiento.precioPorNoche.toInt().toString();
+    final String pricePerHour =
+        widget.alojamiento.precioPorHora.toInt().toString();
+    final double rating = widget.user.calificacionPromedio;
     final Color color = getCardColor();
+
     return Padding(
       padding: EdgeInsets.symmetric(vertical: context.spacing.xs),
       child: InkWell(
         onTap: () => widget.housing
-            ? Navigator.push(context,
-                MaterialPageRoute(builder: (context) => HousingProfileScreen()))
+            ? Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => HousingProfileScreen(
+                    user: widget.user,
+                    alojamiento: widget.alojamiento,
+                    perros: widget.perros,
+                    tipoReserva: widget.tipoReserva,
+                    inicioDiaReserva: widget.inicioDiaReserva,
+                    finDiaReserva: widget.finDiaReserva,
+                    inicioHoraReserva: widget.inicioHoraReserva,
+                    finHoraReserva: widget.finHoraReserva,
+                    logedUserController: widget.logedUserController,
+                  ),
+                ),
+              )
             : Navigator.push(
                 context,
                 MaterialPageRoute(
                   builder: (context) => GuestProfileScreen(
                     ownProfile: false,
+                    logedUserController: widget.logedUserController,
+                    userRequest: widget.user,
                   ),
                 ),
               ),
@@ -68,11 +118,10 @@ class _HousingOrRequestCardState extends State<HousingOrRequestCard> {
               color: widget.favorite ? DugColors.orange : color,
               boxShadow: [
                 BoxShadow(
-                  color: Colors.grey.withOpacity(0.5), // Color de la sombra
-                  spreadRadius: 2, // Cuán extendida estará la sombra
-                  blurRadius: 5, // Cuán desenfocada estará la sombra
-                  offset: const Offset(
-                      5, 3), // Offset de la sombra (horizontal, vertical)
+                  color: Colors.grey.withOpacity(0.5),
+                  spreadRadius: 2,
+                  blurRadius: 5,
+                  offset: const Offset(5, 3),
                 ),
               ],
             ),
@@ -82,42 +131,50 @@ class _HousingOrRequestCardState extends State<HousingOrRequestCard> {
                   children: [
                     if (widget.housing) ...{
                       PhotoImageCard(
-                        image: widget.image,
-                        name: widget.name,
+                        image: image,
+                        name: name,
                         housing: true,
                       ),
                       Spacer(),
                       ContainerInfoHousingCard(
                         favorite: widget.favorite,
                         color: color,
-                        location: widget.location,
-                        pricePerNight: widget.pricePerNight,
-                        pricePerHour: widget.pricePerHour,
+                        location: location,
+                        pricePerNight: pricePerNight,
+                        pricePerHour: pricePerHour,
                         perros: widget.perros,
-                        rating: widget.rating,
+                        rating: rating,
                       )
                     } else ...{
                       if (petView) ...{
                         ContainerInfoRequestPetCard(
                           favorite: widget.favorite,
                           color: color,
+                          age: dogAge().toString(),
+                          bred: firstDog.raza,
+                          personality: firstDog.personalidad,
+                          rating: 0,
                         ),
                         Spacer(),
                         PhotoImageCard(
-                          image: widget.petImage ?? '',
-                          name: widget.petName ?? '',
+                          image: firstDog.photos.isNotEmpty
+                              ? firstDog.photos.first
+                              : '',
+                          name: firstDog.nombre,
                           housing: false,
                         ),
                       } else ...{
                         PhotoImageCard(
-                          image: widget.image,
-                          name: widget.name,
+                          image: image,
+                          name: name,
                           housing: false,
                         ),
                         Spacer(),
                         ContainerInfoRequestCard(
                           favorite: widget.favorite,
                           color: color,
+                          description: description,
+                          rating: 0,
                         ),
                       }
                     }
@@ -154,6 +211,9 @@ class _HousingOrRequestCardState extends State<HousingOrRequestCard> {
       ),
     );
   }
+
+  int dogAge() =>
+      DateTime.now().year - widget.perros.first.fechaNacimiento.date.year;
 
   Color getCardColor() {
     if (widget.favorite) {
@@ -380,14 +440,23 @@ class ContainerInfoRequestPetCard extends StatelessWidget {
     super.key,
     required this.favorite,
     required this.color,
+    required this.bred,
+    required this.age,
+    required this.personality,
+    required this.rating,
   });
 
   final bool favorite;
   final Color color;
+  final String bred;
+  final String age;
+  final String personality;
+  final int rating;
 
   @override
   Widget build(BuildContext context) {
     return Container(
+      width: 230,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.all(
           Radius.circular(context.radius.md),
@@ -404,13 +473,13 @@ class ContainerInfoRequestPetCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
-              children: const [
+              children: [
                 SizedBox(
                   width: 140,
                 ),
                 InfoItem(
                   icon: Icons.star,
-                  name: '4.8',
+                  name: rating.toString(),
                   colorIcon: DugColors.green,
                 ),
               ],
@@ -424,17 +493,17 @@ class ContainerInfoRequestPetCard extends StatelessWidget {
                 SizedBox(
                   height: context.spacing.xs,
                 ),
-                const InfoItem(
+                InfoItem(
                   icon: Icons.pets,
-                  name: 'Labrador',
+                  name: bred,
                   colorIcon: DugColors.green,
                 ),
                 SizedBox(
-                  width: context.spacing.xl,
+                  width: context.spacing.sm,
                 ),
-                const InfoItem(
+                InfoItem(
                   icon: Icons.cake,
-                  name: '3 años',
+                  name: '$age años',
                   colorIcon: DugColors.green,
                 ),
               ],
@@ -450,12 +519,15 @@ class ContainerInfoRequestPetCard extends StatelessWidget {
                     Text(
                       'Personalidad',
                       style: TextStyle(
-                          color: DugColors.greyTextCard,
-                          fontSize: context.text.size.xxs),
+                        color: DugColors.greyTextCard,
+                        fontSize: context.text.size.xxs,
+                      ),
                     ),
-                    const InfoItem(
+                    InfoItem(
                       icon: Icons.emoji_emotions,
-                      name: 'Nervioso, jugueton',
+                      name: personality.length > 16
+                          ? personality.replaceRange(16, null, '...')
+                          : personality,
                       colorIcon: DugColors.green,
                     ),
                   ],
@@ -477,10 +549,14 @@ class ContainerInfoRequestCard extends StatelessWidget {
     super.key,
     required this.favorite,
     required this.color,
+    required this.rating,
+    required this.description,
   });
 
   final bool favorite;
   final Color color;
+  final int rating;
+  final String description;
 
   @override
   Widget build(BuildContext context) {
@@ -501,13 +577,13 @@ class ContainerInfoRequestCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
-              children: const [
+              children: [
                 SizedBox(
                   width: 140,
                 ),
                 InfoItem(
                   icon: Icons.star,
-                  name: '4.8',
+                  name: rating.toString(),
                   colorIcon: DugColors.purple,
                 ),
               ],
@@ -519,7 +595,7 @@ class ContainerInfoRequestCard extends StatelessWidget {
               width: 195,
               height: 75,
               child: Text(
-                'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.',
+                description,
                 overflow: TextOverflow.clip,
               ),
             )
@@ -543,8 +619,8 @@ class InfoItem extends StatelessWidget {
     required this.icon,
     required this.name,
     this.colorIcon,
-    this.button, 
-    this.textSize, 
+    this.button,
+    this.textSize,
     this.textColor,
   });
 
@@ -563,10 +639,9 @@ class InfoItem extends StatelessWidget {
         Text(
           name,
           style: TextStyle(
-            color: textColor ?? DugColors.greyTextCard,
-            fontWeight: isButton ? FontWeight.normal : FontWeight.bold,
-            fontSize: textSize ?? 14
-          ),
+              color: textColor ?? DugColors.greyTextCard,
+              fontWeight: isButton ? FontWeight.normal : FontWeight.bold,
+              fontSize: textSize ?? 14),
         )
       ],
     );

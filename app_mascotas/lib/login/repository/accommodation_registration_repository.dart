@@ -5,7 +5,7 @@ import 'package:http/http.dart' as http;
 
 class AccommodationsRegistrationRepository  {
   
-  final String url = 'http://192.168.10.21:3000/accommodations'; 
+  final String url = 'http://192.168.10.15:3000/accommodations'; 
 
 
   Future<void> registerAccommodations(BuildContext context, Accommodation accommodation) async{  

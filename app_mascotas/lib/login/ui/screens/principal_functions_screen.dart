@@ -1,4 +1,5 @@
 import 'package:app_mascotas/extensions/dimension_extension.dart';
+import 'package:app_mascotas/login/controller/loged_user_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:app_mascotas/login/ui/screens/selection_user_screen.dart';
@@ -8,6 +9,11 @@ import 'package:app_mascotas/widgets/buttons/principal_button.dart';
 import 'package:dots_indicator/dots_indicator.dart';
 
 class PrincipalFuctionsScreen extends StatefulWidget {
+
+  final LogedUserController logedUserController;
+
+  const PrincipalFuctionsScreen({super.key, required this.logedUserController});
+  
   @override
   _PrincipalFuctionsScreenState createState() =>
       _PrincipalFuctionsScreenState();
@@ -107,7 +113,7 @@ class _PrincipalFuctionsScreenState extends State<PrincipalFuctionsScreen> {
                               Navigator.of(context).push(
                                 MaterialPageRoute(
                                   builder: (context) =>
-                                      SelectionUserScreen(), // La siguiente pantalla
+                                      SelectionUserScreen(logedUserController: widget.logedUserController,),
                                 ),
                               );
                             }
@@ -203,7 +209,7 @@ class _PrincipalFuctionsScreenState extends State<PrincipalFuctionsScreen> {
                                   onPressed: () {
                                     setState(() {
                                       showCarousel =
-                                          true; // Mostrar el carrusel al presionar el botón
+                                          true; 
                                     });
                                   },
                                   text: 'Empezar',

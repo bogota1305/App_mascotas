@@ -4,6 +4,7 @@ import 'package:app_mascotas/extensions/dimension_extension.dart';
 import 'package:app_mascotas/extensions/radius_extension.dart';
 import 'package:app_mascotas/home/ui/screens/principal_screen.dart';
 import 'package:app_mascotas/home/ui/widgets/app_bar_dug.dart';
+import 'package:app_mascotas/login/controller/loged_user_controller.dart';
 import 'package:app_mascotas/login/models/user_model.dart';
 import 'package:app_mascotas/login/repository/user_registration_repository.dart';
 import 'package:app_mascotas/login/ui/screens/pet_info_screen.dart';
@@ -15,8 +16,13 @@ import 'package:image_picker/image_picker.dart';
 
 class OwnerProfileCreationScreen extends StatefulWidget {
   final User user;
+  final LogedUserController logedUserController;
 
-  const OwnerProfileCreationScreen({super.key, required this.user});
+  const OwnerProfileCreationScreen({
+    super.key,
+    required this.user,
+    required this.logedUserController,
+  });
 
   @override
   _OwnerProfileCreationScreenState createState() =>
@@ -29,6 +35,9 @@ class _OwnerProfileCreationScreenState
   List<String> profileImages = []; // Lista de rutas de imágenes
   String description = '';
   final descriptionController = TextEditingController();
+
+  final UserRegistrationRepository userRegistrationRepository =
+      UserRegistrationRepository();
 
   @override
   void dispose() {
@@ -49,7 +58,8 @@ class _OwnerProfileCreationScreenState
               fontSize: context.text.size.md,
               fontWeight: FontWeight.bold,
             ),
-          ),
+          ), 
+          logedUserController: widget.logedUserController,
         ),
         backgroundColor: DugColors.purple,
       ),
@@ -194,16 +204,49 @@ class _OwnerProfileCreationScreenState
     );
   }
 
-  void onTapProfileButton(BuildContext context) {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => PetInfoScreen(
-          user: widget.user.copyWith(
-            descripcion: description,
-            fotos: profileImages,
-          ),
-        ), // La siguiente pantalla
-      ),
+  Future<void> onTapProfileButton(BuildContext context) async {
+    User updatedUser = widget.user.copyWith(
+        descripcion: description, fotos: profileImages, tipo: 'Dueno');
+
+    String userId = '${updatedUser.pais}${updatedUser.documento}';
+
+    userRegistrationRepository.updateUser(
+      context,
+      userId,
+      updatedUser,
     );
+
+    widget.logedUserController.user = updatedUser;
+
+    if (areAllFieldsFilled()) {
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (context) => PetInfoScreen(
+            user: updatedUser, 
+            logedUserController: widget.logedUserController,
+          ), // La siguiente pantalla
+        ),
+      );
+    } else {
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text('Error'),
+          content: Text('Completa todos los campos'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: Text('Aceptar'),
+            ),
+          ],
+        ),
+      );
+    }
+  }
+
+  bool areAllFieldsFilled() {
+    return description.isNotEmpty && profileImages.isNotEmpty;
   }
 }

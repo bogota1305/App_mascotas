@@ -3,8 +3,14 @@ import 'package:app_mascotas/theme/text/text_size.dart';
 import 'package:flutter/material.dart';
 
 class PriceCardContent extends StatelessWidget {
+  final int number;
+  final int price;
+  final String servicio;
   const PriceCardContent({
-    super.key,
+    super.key, 
+    required this.number, 
+    required this.price, 
+    required this.servicio,
   });
 
   @override
@@ -24,9 +30,9 @@ class PriceCardContent extends StatelessWidget {
         ),
         Row(
           children: [
-            Text('Hora'),
+            Text(servicio),
             Spacer(),
-            Text('\$ 10.000'),
+            Text('\$ $price'),
           ],
         ),
         SizedBox(
@@ -34,9 +40,9 @@ class PriceCardContent extends StatelessWidget {
         ),
         Row(
           children: [
-            Text('Total horas'),
+            Text('Total ${servicio}s'),
             Spacer(),
-            Text('x5'),
+            Text(number.toString()),
           ],
         ),
         SizedBox(
@@ -62,7 +68,7 @@ class PriceCardContent extends StatelessWidget {
             ),
             Spacer(),
             Text(
-              '\$ 50.000',
+              '\$ ${number*price}',
               style: TextStyle(
                 fontWeight: FontWeight.bold,
               ),

@@ -4,7 +4,15 @@ import 'package:app_mascotas/theme/colors/dug_colors.dart';
 import 'package:app_mascotas/theme/text/text_size.dart';
 import 'package:flutter/material.dart';
 
-class ReservationAlertDialog extends StatelessWidget {
+class ReservationErrorAlertDialog extends StatelessWidget {
+  final String titulo;
+  final String descripcion;
+
+  const ReservationErrorAlertDialog({
+    super.key,
+    required this.titulo,
+    required this.descripcion,
+  });
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
@@ -15,7 +23,7 @@ class ReservationAlertDialog extends StatelessWidget {
             Radius.circular(context.radius.xl),
           ),
         ),
-        height: 182,
+        height: 230,
         child: Row(
           children: [
             Expanded(
@@ -23,11 +31,11 @@ class ReservationAlertDialog extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   Text(
-                    'Tu solicitud fue enviada con éxito',
+                    titulo,
                     style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                   ),
                   SizedBox(height: 20),
-                  Text('Se te notificará cuando sea aceptada'),
+                  Text(descripcion),
                   SizedBox(height: 16),
                   ElevatedButton(
                     onPressed: () {
@@ -45,7 +53,7 @@ class ReservationAlertDialog extends StatelessWidget {
                     child: Padding(
                       padding: EdgeInsets.all(context.spacing.xs),
                       child: Text(
-                        'Aceptar',
+                        'Volver',
                         style: TextStyle(
                           color: Colors.white,
                           fontSize: context.text.size.md,

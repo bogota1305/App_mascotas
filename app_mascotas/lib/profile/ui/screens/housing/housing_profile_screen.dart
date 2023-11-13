@@ -1,6 +1,10 @@
 import 'package:app_mascotas/extensions/dimension_extension.dart';
 import 'package:app_mascotas/extensions/radius_extension.dart';
 import 'package:app_mascotas/home/ui/widgets/app_bar_dug.dart';
+import 'package:app_mascotas/login/controller/loged_user_controller.dart';
+import 'package:app_mascotas/login/models/accomodation_model.dart';
+import 'package:app_mascotas/login/models/dog_model.dart';
+import 'package:app_mascotas/login/models/user_model.dart';
 import 'package:app_mascotas/profile/ui/widget/housing/housing_card.dart';
 import 'package:app_mascotas/profile/ui/widget/housing/housing_profile_card.dart';
 import 'package:app_mascotas/profile/ui/widget/housing/housing_resume_reservation_card.dart';
@@ -10,6 +14,29 @@ import 'package:flutter/material.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 
 class HousingProfileScreen extends StatelessWidget {
+  final User user;
+  final Accommodation alojamiento;
+  final List<Dog> perros;
+  final String tipoReserva;
+  final DateTime inicioDiaReserva;
+  final DateTime finDiaReserva;
+  final int inicioHoraReserva;
+  final int finHoraReserva;
+  final LogedUserController logedUserController;
+
+  const HousingProfileScreen({
+    super.key,
+    required this.user,
+    required this.alojamiento,
+    required this.perros,
+    required this.tipoReserva,
+    required this.inicioDiaReserva,
+    required this.finDiaReserva,
+    required this.inicioHoraReserva,
+    required this.finHoraReserva, 
+    required this.logedUserController,
+  });
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -25,17 +52,18 @@ class HousingProfileScreen extends StatelessWidget {
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              Spacer(), 
+              Spacer(),
               IconButton(
-                onPressed: () {}, 
+                onPressed: () {},
                 icon: Icon(Icons.favorite, color: DugColors.white),
               ),
               IconButton(
-                onPressed: () {}, 
+                onPressed: () {},
                 icon: Icon(Icons.share, color: DugColors.white),
               )
             ],
           ),
+          logedUserController: logedUserController,
         ),
         backgroundColor: DugColors.blue,
       ),
@@ -76,16 +104,36 @@ class HousingProfileScreen extends StatelessWidget {
                   ),
                 ),
                 SizedBox(height: context.spacing.md),
-                HousingCard(),
+                HousingCard(
+                  location: alojamiento.ubicacion.direccion,
+                  pricePerNight: alojamiento.precioPorNoche.toInt().toString(),
+                  pricePerHour: alojamiento.precioPorHora.toInt().toString(),
+                  ownDogs: perros.length,
+                  housingDogs: 0,
+                ),
                 SizedBox(height: context.spacing.xl),
-                HosingProfileCard(),
+                HosingProfileCard(
+                  image: user.fotos.isNotEmpty ? user.fotos.first : '',
+                  name: user.nombre,
+                  description: user.descripcion,
+                  rating: user.calificacionPromedio,
+                ),
                 SizedBox(height: 130),
               ],
             ),
           ),
           Align(
             alignment: Alignment.bottomCenter,
-            child: HousingResumeReservationCard(),
+            child: HousingResumeReservationCard(
+              tipoReserva: tipoReserva,
+              inicioDiaReserva: inicioDiaReserva,
+              finDiaReserva: finDiaReserva,
+              inicioHoraReserva: inicioHoraReserva,
+              finHoraReserva: finHoraReserva, 
+              logedUserController: logedUserController, 
+              user: user, 
+              alojamiento: alojamiento,
+            ),
           )
         ],
       ),

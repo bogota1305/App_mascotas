@@ -1,4 +1,5 @@
 import 'package:app_mascotas/home/ui/screens/principal_screen.dart';
+import 'package:app_mascotas/login/controller/loged_user_controller.dart';
 import 'package:app_mascotas/login/ui/screens/principal_functions_screen.dart';
 import 'package:app_mascotas/theme/colors/dug_colors.dart';
 import 'package:flutter/material.dart';
@@ -14,6 +15,9 @@ class LogoScreen extends StatefulWidget {
 }
 
 class _LogoScreenState extends State<LogoScreen> {
+
+  final LogedUserController logedUserController = LogedUserController();
+
   @override
   void initState() {
     super.initState();
@@ -22,7 +26,7 @@ class _LogoScreenState extends State<LogoScreen> {
     Future.delayed(Duration(seconds: 5), () {
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(
-          builder: (context) => widget.isLogged ? PrincipalScreen(housingUser: false,) : PrincipalFuctionsScreen(), // La siguiente pantalla
+          builder: (context) => widget.isLogged ? PrincipalScreen(housingUser: false, logedUserController: logedUserController,) : PrincipalFuctionsScreen(logedUserController: logedUserController,), // La siguiente pantalla
         ),
       );
     });
