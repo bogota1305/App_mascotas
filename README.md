@@ -51,4 +51,15 @@ Tipo 5:
 
 ![image](https://github.com/bogota1305/App_mascotas/assets/53906216/c5179d48-91b5-4a89-a3d1-7b3bfe90e968)
 
+## Flujo del servicio
 
+<img width="15972" alt="Flujo del servicio" src="https://github.com/bogota1305/App_mascotas/assets/53906216/7556413c-4d22-4b50-8ac1-03d544ab33d3">
+Blueprint final - Url: https://n9.cl/f5wqg
+
+## Documentos finales
+
+### Ingeniería de sistemas:
+[Proyecto_final_ingeniería_de_sistemas.pdf](https://github.com/bogota1305/App_mascotas/files/13493621/Proyecto_final_ingenieria_de_sistemas.pdf)
+
+### Diseño:
+[Proyecto_final_diseño.pdf](https://github.com/bogota1305/App_mascotas/files/13493624/Proyecto_final_diseno.pdf)
