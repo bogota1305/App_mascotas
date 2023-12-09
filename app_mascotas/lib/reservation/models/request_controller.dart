@@ -1,5 +1,5 @@
 class RequestModel {
-  int? id;
+  String? id;
   String estado;
   String idUsuarioSolicitante;
   String idUsuarioSolicitado;
@@ -46,6 +46,7 @@ class RequestModel {
 
   Map<String, dynamic> toJson() {
     return {
+      'id': id,
       'estado': estado,
       'idUsuarioSolicitante': idUsuarioSolicitante,
       'idUsuarioSolicitado': idUsuarioSolicitado,
@@ -61,7 +62,7 @@ class RequestModel {
   }
 
   RequestModel copyWith({
-    int? id,
+    String? id,
     String? estado,
     String? idUsuarioSolicitante,
     String? idUsuarioSolicitado,

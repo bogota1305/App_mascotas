@@ -9,6 +9,8 @@ class PrincipalButton extends StatelessWidget {
   final String text;
   final Color? backgroundColor;
   final Color? textColor;
+  final double? padding;
+  final double? textSize;
 
   const PrincipalButton({
     super.key,
@@ -16,18 +18,21 @@ class PrincipalButton extends StatelessWidget {
     required this.text,
     this.backgroundColor,
     this.textColor,
+    this.padding,
+    this.textSize,
   });
 
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: EdgeInsets.symmetric(horizontal: context.spacing.xxl),
+      padding: EdgeInsets.symmetric(horizontal: padding ?? context.spacing.xxl),
       child: ElevatedButton(
         style: ElevatedButton.styleFrom(
           backgroundColor: backgroundColor ?? DugColors.blue,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(
-                context.radius.xxxl), // Ajusta el valor según desees
+              context.radius.xxxl,
+            ), // Ajusta el valor según desees
           ),
         ),
         onPressed: () {
@@ -41,7 +46,7 @@ class PrincipalButton extends StatelessWidget {
               child: Text(
                 text,
                 style: TextStyle(
-                  fontSize: context.text.size.lg,
+                  fontSize: textSize ?? context.text.size.lg,
                   fontWeight: FontWeight.bold,
                   color: textColor ?? DugColors.white,
                 ),

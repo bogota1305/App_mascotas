@@ -41,7 +41,7 @@ class HousingOrRequestCard extends StatefulWidget {
     required this.inicioHoraReserva,
     required this.finHoraReserva,
     required this.distancia,
-    required this.logedUserController, 
+    required this.logedUserController,
     this.housingRequest,
   });
 
@@ -96,6 +96,7 @@ class _HousingOrRequestCardState extends State<HousingOrRequestCard> {
                     inicioHoraReserva: widget.inicioHoraReserva,
                     finHoraReserva: widget.finHoraReserva,
                     logedUserController: widget.logedUserController,
+                    favorito: widget.user.favorite,
                   ),
                 ),
               )
@@ -334,7 +335,7 @@ class ContainerInfoHousingCard extends StatelessWidget {
             Row(
               children: [
                 Container(
-                  width: 140,
+                  width: 130,
                   child: Text(
                     location,
                     style: TextStyle(
@@ -420,7 +421,7 @@ class ContainerInfoHousingCard extends StatelessWidget {
                   ),
                 ),
                 SizedBox(
-                  width: context.spacing.xxxl,
+                  width: context.spacing.lg,
                 ),
                 Visibility(
                   visible: favorite,
@@ -613,6 +614,7 @@ class InfoItem extends StatelessWidget {
   final bool? button;
   final double? textSize;
   final Color? textColor;
+  final double? sizeContainer;
 
   const InfoItem({
     super.key,
@@ -621,7 +623,8 @@ class InfoItem extends StatelessWidget {
     this.colorIcon,
     this.button,
     this.textSize,
-    this.textColor,
+    this.textColor, 
+    this.sizeContainer,
   });
 
   @override
@@ -636,12 +639,28 @@ class InfoItem extends StatelessWidget {
         SizedBox(
           width: context.spacing.xxxs,
         ),
-        Text(
-          name,
-          style: TextStyle(
+        Visibility(
+          visible: sizeContainer == null || sizeContainer == 0,
+          replacement: SizedBox(
+            width: sizeContainer,
+            child: Text(
+              name,
+              style: TextStyle(
+                color: textColor ?? DugColors.greyTextCard,
+                fontWeight: isButton ? FontWeight.normal : FontWeight.bold,
+                fontSize: textSize ?? 14,
+                overflow: TextOverflow.ellipsis
+              ),
+            ),
+          ),
+          child: Text(
+            name,
+            style: TextStyle(
               color: textColor ?? DugColors.greyTextCard,
               fontWeight: isButton ? FontWeight.normal : FontWeight.bold,
-              fontSize: textSize ?? 14),
+              fontSize: textSize ?? 14,
+            ),
+          ),
         )
       ],
     );

@@ -91,7 +91,7 @@ class _SelectionUserScreenState extends State<SelectionUserScreen> {
                         Navigator.of(context).push(
                           MaterialPageRoute(
                             builder: (context) => PrincipalScreen(
-                              housingUser: true,
+                              housingUser: false,
                               logedUserController: widget.logedUserController,
                             ),
                           ),
@@ -117,7 +117,7 @@ class _SelectionUserScreenState extends State<SelectionUserScreen> {
                           MaterialPageRoute(
                             builder: (context) => UserPersonalInfoScreen(
                               userTipe: UserTipe.owner,
-                              logedUserController: widget.logedUserController,
+                              logedUserController: widget.logedUserController, 
                             ), // La siguiente pantalla
                           ),
                         );

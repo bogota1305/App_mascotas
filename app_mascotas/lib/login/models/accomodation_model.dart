@@ -48,6 +48,7 @@ class Accommodation {
 
   Map<String, dynamic> toJson() {
     return {
+      'id': id,
       'photos': photos,
       'ubicacion': ubicacion.toJson(),
       'descripcionEspacio': descripcionEspacio,

@@ -3,7 +3,6 @@ import 'package:app_mascotas/home/ui/widgets/app_bar_dug.dart';
 import 'package:app_mascotas/login/controller/loged_user_controller.dart';
 import 'package:app_mascotas/login/models/accomodation_model.dart';
 import 'package:app_mascotas/login/models/user_model.dart';
-import 'package:app_mascotas/reservation/repository/request_repository.dart';
 import 'package:app_mascotas/reservation/ui/widgets/housing_tipe_card_content.dart';
 import 'package:app_mascotas/reservation/ui/widgets/payment_card_content.dart';
 import 'package:app_mascotas/reservation/ui/widgets/price_card_content.dart';

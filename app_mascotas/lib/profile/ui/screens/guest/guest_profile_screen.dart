@@ -1,11 +1,14 @@
 import 'package:app_mascotas/extensions/dimension_extension.dart';
 import 'package:app_mascotas/extensions/radius_extension.dart';
 import 'package:app_mascotas/home/controller/map_controller.dart';
+import 'package:app_mascotas/home/ui/screens/principal_screen.dart';
 import 'package:app_mascotas/home/ui/widgets/app_bar_dug.dart';
 import 'package:app_mascotas/login/controller/loged_user_controller.dart';
 import 'package:app_mascotas/login/models/dog_model.dart';
 import 'package:app_mascotas/login/models/user_model.dart';
+import 'package:app_mascotas/login/repository/auth_repository.dart';
 import 'package:app_mascotas/login/repository/user_registration_repository.dart';
+import 'package:app_mascotas/login/ui/screens/selection_user_screen.dart';
 import 'package:app_mascotas/profile/ui/screens/guest/payment_methods_screen.dart';
 import 'package:app_mascotas/reservation/models/request_controller.dart';
 import 'package:app_mascotas/reservation/repository/request_repository.dart';
@@ -39,8 +42,10 @@ class _GuestProfileScreenState extends State<GuestProfileScreen> {
   int actualPet = 0;
   int numberOfpets = 1;
   final MapController mapController = MapController();
-  final UserRegistrationRepository userRegistrationRepository = UserRegistrationRepository();
+  final UserRegistrationRepository userRegistrationRepository =
+      UserRegistrationRepository();
   final RequestRepository requestRepository = RequestRepository();
+  final AuthRepository authRepository = AuthRepository();
 
   @override
   Widget build(BuildContext context) {
@@ -62,9 +67,10 @@ class _GuestProfileScreenState extends State<GuestProfileScreen> {
     String inicio = '';
     String fin = '';
     String duracion = '';
-
+  
     if (!widget.ownProfile) {
-      user = widget.userRequest ?? widget.logedUserController.createDefaultUser();
+      user =
+          widget.userRequest ?? widget.logedUserController.createDefaultUser();
       request = user.solicitudesCreadas.first;
       if (request.tipoDeServicio == 'Fecha') {
         inicio = '${request.fechaDeInicio.day}/${request.fechaDeInicio.month}';
@@ -77,6 +83,8 @@ class _GuestProfileScreenState extends State<GuestProfileScreen> {
         duracion = ' (Horas: ${request.horaDeFin - request.horaDeInicio}) Hoy';
       }
     }
+
+    List<Dog> perros = user.perros ?? [];
 
     return Scaffold(
       appBar: AppBar(
@@ -146,8 +154,9 @@ class _GuestProfileScreenState extends State<GuestProfileScreen> {
                       Text(
                         duracion,
                         style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: context.text.size.sm),
+                          fontWeight: FontWeight.bold,
+                          fontSize: context.text.size.sm,
+                        ),
                       ),
                     ],
                   ),
@@ -176,7 +185,7 @@ class _GuestProfileScreenState extends State<GuestProfileScreen> {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 55),
               child: Row(
-                mainAxisAlignment: (user.perros?.isNotEmpty ?? false)
+                mainAxisAlignment: (perros.isNotEmpty)
                     ? MainAxisAlignment.spaceBetween
                     : MainAxisAlignment.center,
                 children: [
@@ -187,15 +196,14 @@ class _GuestProfileScreenState extends State<GuestProfileScreen> {
                     },
                     child: ProfileCircleCard(
                       pet: pet,
-                      image:
-                          'https://media.istockphoto.com/id/1200677760/es/foto/retrato-de-apuesto-joven-sonriente-con-los-brazos-cruzados.jpg?b=1&s=612x612&w=0&k=20&c=3OB0hSUgwzlzUh8ek-6Z2z_XwFKnRE7IOHb1oWvoMZ4=',
+                      image: user.fotos.first,
                       isUser: true,
                       name: user.nombre,
                       ownProfile: widget.ownProfile,
                     ),
                   ),
                   Visibility(
-                    visible: user.perros?.isNotEmpty ?? false,
+                    visible: perros.isNotEmpty,
                     child: Stack(
                       children: [
                         InkWell(
@@ -205,10 +213,13 @@ class _GuestProfileScreenState extends State<GuestProfileScreen> {
                           },
                           child: ProfileCircleCard(
                             pet: pet,
-                            image:
-                                'https://upload.wikimedia.org/wikipedia/commons/thumb/0/04/Labrador_Retriever_%281210559%29.jpg/1200px-Labrador_Retriever_%281210559%29.jpg',
+                            image: perros.isNotEmpty && perros[actualPet].photos.isNotEmpty
+                                ? perros[actualPet].photos.first
+                                : '',
                             isUser: false,
-                            name: user.perros?[actualPet].nombre ?? '',
+                            name: perros.isNotEmpty
+                                ? perros[actualPet].nombre
+                                : '',
                             ownProfile: widget.ownProfile,
                           ),
                         ),
@@ -292,75 +303,163 @@ class _GuestProfileScreenState extends State<GuestProfileScreen> {
               replacement: PetProfileContent(
                 ownProfile: widget.ownProfile,
                 user: user,
-                dog: user.perros?[actualPet] ??
-                    Dog(
-                      nombre: '',
-                      fechaNacimiento: DateTime.now(),
-                      raza: '',
-                      personalidad: '',
-                      cuidadosEspeciales: '',
-                      sexo: '',
-                      idUser: '',
-                      photos: [],
-                    ),
+                dog: perros.isNotEmpty
+                    ? perros[actualPet]
+                    : Dog(
+                        nombre: '',
+                        fechaNacimiento: DateTime.now(),
+                        raza: '',
+                        personalidad: '',
+                        cuidadosEspeciales: '',
+                        sexo: '',
+                        idUser: '',
+                        photos: [],
+                      ),
+                logedUserController: widget.logedUserController,
+                userRegistrationRepository: userRegistrationRepository,
               ),
               child: GuestProfileContent(
                 ownProfile: widget.ownProfile,
                 user: user,
                 logedUserController: widget.logedUserController,
+                userRegistrationRepository: userRegistrationRepository,
               ),
             ),
             SizedBox(height: context.spacing.md),
             Visibility(
-              visible: !widget.ownProfile && request.estado == 'Creada',
+              visible: widget.ownProfile,
               child: PrincipalButton(
-                onPressed: () {
+                onPressed: () async {
+                  bool logout = await authRepository.logoutUser(
+                      context, widget.logedUserController.token);
 
-                  List<RequestModel> solicitudesRecibidas = widget.logedUserController.user.solicitudesRecibidas;
-                  solicitudesRecibidas.remove(request);
-
-                  List<RequestModel> solicitudesCreadas = user.solicitudesCreadas;
-                  solicitudesCreadas.remove(request);
-
-                  request = request.copyWith(estado: 'Aceptada');
-
-                  solicitudesRecibidas.add(request);
-                  solicitudesCreadas.add(request);
-
-
-                  requestRepository.updateRequest(context, request.id ?? 0, request);
-
-                  userRegistrationRepository.updateUser(context, widget.logedUserController.user.id ?? '', widget.logedUserController.user.copyWith(solicitudesRecibidas: solicitudesRecibidas));
-                  userRegistrationRepository.updateUser(context, user.id ?? '', user.copyWith(solicitudesCreadas: solicitudesCreadas));
-
+                  if (logout) {
+                    widget.logedUserController.user =
+                        widget.logedUserController.createDefaultUser();
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => SelectionUserScreen(
+                            logedUserController: widget.logedUserController),
+                      ),
+                    );
+                  }
                 },
-                text: 'Aceptar solicitud',
+                text: 'Cerrar sesión',
+                backgroundColor: DugColors.orange,
+                textColor: DugColors.white,
               ),
             ),
-            SizedBox(height: context.spacing.xs),
             Visibility(
               visible: !widget.ownProfile && request.estado == 'Creada',
-              child: PrincipalButton(
-                onPressed: () {
+              child: Column(
+                children: [
+                  PrincipalButton(
+                    onPressed: () {
+                      String idSolicitante = widget.logedUserController.user.id ??
+                          '${widget.logedUserController.user.pais}${widget.logedUserController.user.documento}';
+                      String idSolicitado = user.id ?? '${user.pais}${user.documento}';
+                      String idSolicitud = request.id ?? '$idSolicitante$idSolicitado' ;
+                      List<RequestModel> solicitudesRecibidas =
+                          widget.logedUserController.user.solicitudesRecibidas;
+                      solicitudesRecibidas.remove(request);
 
-                  List<RequestModel> solicitudesRecibidas = widget.logedUserController.user.solicitudesRecibidas;
-                  solicitudesRecibidas.remove(request);
+                      List<RequestModel> solicitudesCreadas =
+                          user.solicitudesCreadas;
+                      solicitudesCreadas.remove(request);
 
-                  List<RequestModel> solicitudesCreadas = user.solicitudesCreadas;
-                  solicitudesCreadas.remove(request);
+                      request = request.copyWith(estado: 'Aceptada');
 
-                  request = request.copyWith(estado: 'Rechazada');
+                      solicitudesRecibidas.add(request);
+                      solicitudesCreadas.add(request);
 
-                  solicitudesCreadas.add(request);
+                      requestRepository.updateRequest(
+                        context,
+                        idSolicitud,
+                        request,
+                      );
 
-                  requestRepository.updateRequest(context, request.id ?? 0, request);
+                      userRegistrationRepository.updateUser(
+                        context,
+                        widget.logedUserController.user.id ?? '',
+                        widget.logedUserController.user.copyWith(
+                          solicitudesRecibidas: solicitudesRecibidas,
+                        ),
+                      );
+                      userRegistrationRepository.updateUser(
+                        context,
+                        user.id ?? '',
+                        user.copyWith(
+                          solicitudesCreadas: solicitudesCreadas,
+                        ),
+                      );
 
-                  userRegistrationRepository.updateUser(context, widget.logedUserController.user.id ?? '', widget.logedUserController.user.copyWith(solicitudesRecibidas: solicitudesRecibidas));
-                  userRegistrationRepository.updateUser(context, user.id ?? '', user.copyWith(solicitudesCreadas: solicitudesCreadas));
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) => PrincipalScreen(
+                            housingUser:
+                                widget.logedUserController.user.tipo == 'Cuidador',
+                            logedUserController: widget.logedUserController,
+                          ),
+                        ),
+                      );
+                    },
+                    text: 'Aceptar solicitud',
+                  ),
+                  SizedBox(height: context.spacing.xs),
+                  PrincipalButton(
+                    onPressed: () {
+                      String idSolicitante = widget.logedUserController.user.id ??
+                          '${widget.logedUserController.user.pais}${widget.logedUserController.user.documento}';
+                      String idSolicitado = user.id ?? '${user.pais}${user.documento}';
+                      String idSolicitud = request.id ?? '$idSolicitante$idSolicitado' ;
+                      List<RequestModel> solicitudesRecibidas =
+                          widget.logedUserController.user.solicitudesRecibidas;
+                      solicitudesRecibidas.remove(request);
 
-                },
-                text: 'Rechazar solicitud',
-                backgroundColor: DugColors.orange,
+                      List<RequestModel> solicitudesCreadas =
+                          user.solicitudesCreadas;
+                      solicitudesCreadas.remove(request);
+
+                      request = request.copyWith(estado: 'Rechazada');
+
+                      solicitudesCreadas.add(request);
+
+                      requestRepository.updateRequest(
+                        context,
+                        idSolicitud,
+                        request,
+                      );
+
+                      userRegistrationRepository.updateUser(
+                        context,
+                        widget.logedUserController.user.id ?? '',
+                        widget.logedUserController.user.copyWith(
+                          solicitudesRecibidas: solicitudesRecibidas,
+                        ),
+                      );
+                      userRegistrationRepository.updateUser(
+                        context,
+                        user.id ?? '',
+                        user.copyWith(
+                          solicitudesCreadas: solicitudesCreadas,
+                        ),
+                      );
+
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) => PrincipalScreen(
+                            housingUser:
+                                widget.logedUserController.user.tipo == 'Cuidador',
+                            logedUserController: widget.logedUserController,
+                          ),
+                        ),
+                      );
+                    },
+                    text: 'Rechazar solicitud',
+                    backgroundColor: DugColors.orange,
+                    
+                  ),
+                ],
               ),
             ),
             SizedBox(height: context.spacing.md),
@@ -375,12 +474,14 @@ class GuestProfileContent extends StatelessWidget {
   final bool ownProfile;
   final User user;
   final LogedUserController logedUserController;
+  final UserRegistrationRepository userRegistrationRepository;
 
   const GuestProfileContent({
     super.key,
     required this.ownProfile,
     required this.user,
     required this.logedUserController,
+    required this.userRegistrationRepository,
   });
 
   @override
@@ -396,15 +497,7 @@ class GuestProfileContent extends StatelessWidget {
         ),
         SizedBox(height: context.spacing.md),
         ResumeReservationCard(
-          child: PhotosCarousel(
-              image1:
-                  'https://pics.nuroa.com/casa_en_venta_en_bogota_bosque_de_pinos_4300006692099552305.jpg',
-              image2:
-                  'https://pics.nuroa.com/casa_en_venta_en_bogota_bosque_de_pinos_4300006692099552305.jpg',
-              image3:
-                  'https://pics.nuroa.com/casa_en_venta_en_bogota_bosque_de_pinos_4300006692099552305.jpg',
-              image4:
-                  'https://pics.nuroa.com/casa_en_venta_en_bogota_bosque_de_pinos_4300006692099552305.jpg'),
+          child: PhotosCarousel(images: user.fotos,),
         ),
         SizedBox(height: context.spacing.md),
         Visibility(
@@ -417,6 +510,17 @@ class GuestProfileContent extends StatelessWidget {
                 ),
               ),
               SizedBox(height: context.spacing.md),
+              Visibility(
+                visible: user.tipo == 'Cuidador',
+                child: Column(
+                  children: [
+                    ResumeReservationCard(
+                      child: PhotosCarousel(images: user.alojamiento?.photos ?? [],),
+                    ),
+                    SizedBox(height: context.spacing.md),
+                  ],
+                ),
+              ),
               ResumeReservationCard(
                 child: GuestProfilePaymentCardContent(
                   logedUserController: logedUserController,
@@ -426,6 +530,8 @@ class GuestProfileContent extends StatelessWidget {
               ResumeReservationCard(
                 child: GuestProfileInfoCardContent(
                   user: user,
+                  logedUserController: logedUserController,
+                  userRegistrationRepository: userRegistrationRepository,
                 ),
               ),
               SizedBox(height: context.spacing.md),
@@ -437,6 +543,8 @@ class GuestProfileContent extends StatelessWidget {
             pet: false,
             ownProfile: ownProfile,
             user: user,
+            logedUserController: logedUserController,
+            userRegistrationRepository: userRegistrationRepository,
           ),
         ),
       ],
@@ -445,31 +553,20 @@ class GuestProfileContent extends StatelessWidget {
 }
 
 class PhotosCarousel extends StatelessWidget {
-  final String image1;
-  final String image2;
-  final String image3;
-  final String image4;
+  final List<String> images;
 
   const PhotosCarousel({
-    super.key,
-    required this.image1,
-    required this.image2,
-    required this.image3,
-    required this.image4,
-  });
+    Key? key,
+    required this.images,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return CarouselSlider(
-      items: [
-        Image.network(image1),
-        Image.network(image2),
-        Image.network(image3),
-        Image.network(image4),
-      ].map((image) {
+      items: images.map((image) {
         return Container(
           height: 50,
-          child: image,
+          child: Image.network(image),
         );
       }).toList(),
       options: CarouselOptions(
@@ -486,16 +583,21 @@ class PhotosCarousel extends StatelessWidget {
   }
 }
 
+
 class PetProfileContent extends StatelessWidget {
   final bool ownProfile;
   final User user;
   final Dog dog;
+  final LogedUserController logedUserController;
+  final UserRegistrationRepository userRegistrationRepository;
 
   const PetProfileContent({
     super.key,
     required this.ownProfile,
     required this.user,
     required this.dog,
+    required this.logedUserController,
+    required this.userRegistrationRepository,
   });
 
   @override
@@ -511,21 +613,15 @@ class PetProfileContent extends StatelessWidget {
         ),
         SizedBox(height: context.spacing.md),
         ResumeReservationCard(
-          child: PhotosCarousel(
-              image1:
-                  'https://pics.nuroa.com/casa_en_venta_en_bogota_bosque_de_pinos_4300006692099552305.jpg',
-              image2:
-                  'https://pics.nuroa.com/casa_en_venta_en_bogota_bosque_de_pinos_4300006692099552305.jpg',
-              image3:
-                  'https://pics.nuroa.com/casa_en_venta_en_bogota_bosque_de_pinos_4300006692099552305.jpg',
-              image4:
-                  'https://pics.nuroa.com/casa_en_venta_en_bogota_bosque_de_pinos_4300006692099552305.jpg'),
+          child: PhotosCarousel(images: dog.photos),
         ),
         SizedBox(height: context.spacing.md),
         ResumeReservationCard(
           child: PetProfileInfoCardContent(
             ownProfile: ownProfile,
             dog: dog,
+            logedUserController: logedUserController,
+            userRegistrationRepository: userRegistrationRepository,
           ),
         ),
         SizedBox(height: context.spacing.md),
@@ -534,6 +630,9 @@ class PetProfileContent extends StatelessWidget {
             pet: true,
             ownProfile: ownProfile,
             user: user,
+            logedUserController: logedUserController,
+            userRegistrationRepository: userRegistrationRepository,
+            dog: dog,
           ),
         ),
       ],
@@ -699,13 +798,15 @@ class GuestProfileLocationCardContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    bool housingUser = user.tipo == 'Cuidador';
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           children: [
             Text(
-              'Ubicación preterminada',
+              housingUser ? 'Ubicación alojamiento' : 'Veterinaria',
               style: TextStyle(
                 fontSize: context.text.size.md,
                 fontWeight: FontWeight.bold,
@@ -737,20 +838,78 @@ class GuestProfileLocationCardContent extends StatelessWidget {
         SizedBox(
           height: context.spacing.lg,
         ),
-        Center(
-          child: GuestProfileLocationToggleButtons(),
-        ),
-        SizedBox(
-          height: context.spacing.lg,
+        // Column(
+        //   children: [
+        //     Center(
+        //       child: GuestProfileLocationToggleButtons(),
+        //     ),
+        //     SizedBox(
+        //       height: context.spacing.lg,
+        //     ),
+        //   ],
+        // ),
+        Visibility(
+          visible: !housingUser,
+          child: Column(
+            children: [
+              Row(
+                children: [
+                  Text(
+                    'Nombre:',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  Spacer(),
+                  Container(
+                    width: 150,
+                    child: Text(
+                      user.clinicaVeterinaria?.nombre ?? '',
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(
+                height: context.spacing.lg,
+              ),
+              Row(
+                children: [
+                  Text(
+                    'Telefono:',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  Spacer(),
+                  Container(
+                    width: 150,
+                    child: Text(
+                      user.clinicaVeterinaria?.numeroTelefono ?? '',
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(
+                height: context.spacing.lg,
+              ),
+            ],
+          ),
         ),
         Row(
           children: [
-            Text('Dirección:', style: TextStyle(fontWeight: FontWeight.bold)),
+            Text(
+              'Dirección:',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
             Spacer(),
             Container(
               width: 150,
               child: Text(
-                '${user.alojamiento?.ubicacion.direccion ?? ''}',
+                housingUser
+                    ? user.alojamiento?.ubicacion.direccion ?? ''
+                    : user.clinicaVeterinaria?.ubicacion.direccion ?? '',
               ),
             ),
           ],
@@ -896,9 +1055,13 @@ class GuestProfilePaymentCardContent extends StatelessWidget {
 
 class GuestProfileInfoCardContent extends StatelessWidget {
   final User user;
+  final LogedUserController logedUserController;
+  final UserRegistrationRepository userRegistrationRepository;
   const GuestProfileInfoCardContent({
     super.key,
     required this.user,
+    required this.logedUserController,
+    required this.userRegistrationRepository,
   });
 
   @override
@@ -963,22 +1126,52 @@ class GuestProfileInfoCardContent extends StatelessWidget {
   }
 }
 
-class GuestProfileDescriptionCardContent extends StatelessWidget {
+class GuestProfileDescriptionCardContent extends StatefulWidget {
   final bool pet;
   final bool ownProfile;
   final User user;
   final Dog? dog;
+  final LogedUserController logedUserController;
+  final UserRegistrationRepository userRegistrationRepository;
 
-  const GuestProfileDescriptionCardContent({
+  GuestProfileDescriptionCardContent({
     super.key,
     required this.pet,
     required this.ownProfile,
     required this.user,
     this.dog,
+    required this.logedUserController,
+    required this.userRegistrationRepository,
   });
 
   @override
+  State<GuestProfileDescriptionCardContent> createState() =>
+      _GuestProfileDescriptionCardContentState();
+}
+
+class _GuestProfileDescriptionCardContentState
+    extends State<GuestProfileDescriptionCardContent> {
+  bool editing = false;
+
+  String description = '';
+  String newDescription = 'null';
+  TextEditingController descriptionController = TextEditingController();
+
+  @override
   Widget build(BuildContext context) {
+    description =
+        widget.pet ? widget.dog?.personalidad ?? '' : widget.user.descripcion;
+    if (newDescription == 'null') {
+      newDescription = description;
+      descriptionController = TextEditingController(text: newDescription);
+    }
+    @override
+    void dispose() {
+      // Liberar controladores cuando la página se cierre
+      descriptionController.dispose();
+      super.dispose();
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -993,23 +1186,60 @@ class GuestProfileDescriptionCardContent extends StatelessWidget {
             ),
             Spacer(),
             Visibility(
-              visible: ownProfile,
-              child: Container(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.all(
-                    Radius.circular(context.radius.lg),
+              visible: widget.ownProfile,
+              child: InkWell(
+                onTap: () {
+                  if (editing) {
+                    User updateUser = widget.user;
+
+                    if (widget.pet) {
+                      List<Dog> perros = widget.user.perros ?? [];
+                      for (int i = 0; i < perros.length; i++) {
+                        if (perros[i] == widget.dog) {
+                          perros[i] = widget.dog
+                                  ?.copyWith(personalidad: newDescription) ??
+                              perros[i];
+                        }
+                      }
+                      updateUser = widget.user.copyWith(
+                        perros: perros,
+                      );
+                    } else {
+                      updateUser = widget.user.copyWith(
+                        descripcion: newDescription,
+                      );
+                    }
+
+                    widget.userRegistrationRepository.updateUser(
+                      context,
+                      updateUser.id ??
+                          '${updateUser.pais}${updateUser.documento}',
+                      updateUser,
+                    );
+
+                    widget.logedUserController.user = updateUser;
+                  }
+                  setState(() {
+                    editing = !editing;
+                  });
+                },
+                child: Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.all(
+                      Radius.circular(context.radius.lg),
+                    ),
+                    color: widget.pet ? DugColors.green : DugColors.purple,
                   ),
-                  color: pet ? DugColors.green : DugColors.purple,
-                ),
-                child: Padding(
-                  padding: EdgeInsets.symmetric(
-                      vertical: context.spacing.xxs,
-                      horizontal: context.spacing.sm),
-                  child: Text(
-                    'Editar',
-                    style: TextStyle(
-                      color: DugColors.white,
-                      fontSize: context.text.size.xxs,
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(
+                        vertical: context.spacing.xxs,
+                        horizontal: context.spacing.sm),
+                    child: Text(
+                      editing ? 'Guardar' : 'Editar',
+                      style: TextStyle(
+                        color: DugColors.white,
+                        fontSize: context.text.size.xxs,
+                      ),
                     ),
                   ),
                 ),
@@ -1020,24 +1250,69 @@ class GuestProfileDescriptionCardContent extends StatelessWidget {
         SizedBox(
           height: context.spacing.lg,
         ),
-        Text(pet ? dog?.personalidad ?? '' : user.descripcion),
+        Visibility(
+          visible: !editing,
+          replacement: TextField(
+            controller: descriptionController,
+            maxLines: 4,
+            decoration: InputDecoration(
+              hintText: 'Escribe una descripción..',
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(context.radius.xxxl),
+              ),
+            ),
+            onChanged: (value) {
+              setState(() {
+                newDescription = value;
+              });
+            },
+          ),
+          child: Text(
+            newDescription,
+          ),
+        ),
       ],
     );
   }
 }
 
-class PetProfileInfoCardContent extends StatelessWidget {
+class PetProfileInfoCardContent extends StatefulWidget {
   final bool ownProfile;
   final Dog dog;
+  final LogedUserController logedUserController;
+  final UserRegistrationRepository userRegistrationRepository;
 
-  const PetProfileInfoCardContent({
+  PetProfileInfoCardContent({
     super.key,
     required this.ownProfile,
     required this.dog,
+    required this.logedUserController,
+    required this.userRegistrationRepository,
   });
 
   @override
+  State<PetProfileInfoCardContent> createState() =>
+      _PetProfileInfoCardContentState();
+}
+
+class _PetProfileInfoCardContentState extends State<PetProfileInfoCardContent> {
+  bool editing = false;
+  String newPersonality = 'null';
+  TextEditingController personalityController = TextEditingController();
+  String newCares = 'null';
+  TextEditingController caresController = TextEditingController();
+
+  @override
   Widget build(BuildContext context) {
+    if (newPersonality == 'null') {
+      newPersonality = widget.dog.personalidad;
+      personalityController = TextEditingController(text: newPersonality);
+    }
+    if (newCares == 'null') {
+      newCares = widget.dog.cuidadosEspeciales;
+      caresController = TextEditingController(text: newCares);
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -1052,23 +1327,55 @@ class PetProfileInfoCardContent extends StatelessWidget {
             ),
             Spacer(),
             Visibility(
-              visible: ownProfile,
-              child: Container(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.all(
-                    Radius.circular(context.radius.lg),
+              visible: widget.ownProfile,
+              child: InkWell(
+                onTap: () {
+                  if (editing) {
+                    User updateUser = widget.logedUserController.user;
+
+                    List<Dog> perros = updateUser.perros ?? [];
+                    for (int i = 0; i < perros.length; i++) {
+                      if (perros[i] == widget.dog) {
+                        perros[i] = widget.dog.copyWith(
+                          personalidad: newPersonality,
+                          cuidadosEspeciales: newCares,
+                        );
+                      }
+                    }
+                    updateUser = updateUser.copyWith(
+                      perros: perros,
+                    );
+
+                    widget.userRegistrationRepository.updateUser(
+                      context,
+                      updateUser.id ??
+                          '${updateUser.pais}${updateUser.documento}',
+                      updateUser,
+                    );
+
+                    widget.logedUserController.user = updateUser;
+                  }
+                  setState(() {
+                    editing = !editing;
+                  });
+                },
+                child: Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.all(
+                      Radius.circular(context.radius.lg),
+                    ),
+                    color: DugColors.green,
                   ),
-                  color: DugColors.green,
-                ),
-                child: Padding(
-                  padding: EdgeInsets.symmetric(
-                      vertical: context.spacing.xxs,
-                      horizontal: context.spacing.sm),
-                  child: Text(
-                    'Editar',
-                    style: TextStyle(
-                      color: DugColors.white,
-                      fontSize: context.text.size.xxs,
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(
+                        vertical: context.spacing.xxs,
+                        horizontal: context.spacing.sm),
+                    child: Text(
+                      editing ? 'Guardar' : 'Editar',
+                      style: TextStyle(
+                        color: DugColors.white,
+                        fontSize: context.text.size.xxs,
+                      ),
                     ),
                   ),
                 ),
@@ -1086,7 +1393,7 @@ class PetProfileInfoCardContent extends StatelessWidget {
         SizedBox(
           height: context.spacing.xs,
         ),
-        Text(dog.raza),
+        Text(widget.dog.raza),
         SizedBox(
           height: context.spacing.sm,
         ),
@@ -1097,7 +1404,24 @@ class PetProfileInfoCardContent extends StatelessWidget {
         SizedBox(
           height: context.spacing.xs,
         ),
-        Text(dog.personalidad),
+        Visibility(
+          visible: !editing,
+          replacement: TextField(
+            controller: personalityController,
+            maxLines: 4,
+            decoration: InputDecoration(
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(context.radius.xxxl),
+              ),
+            ),
+            onChanged: (value) {
+              setState(() {
+                newPersonality = value;
+              });
+            },
+          ),
+          child: Text(newPersonality),
+        ),
         SizedBox(
           height: context.spacing.sm,
         ),
@@ -1108,7 +1432,24 @@ class PetProfileInfoCardContent extends StatelessWidget {
         SizedBox(
           height: context.spacing.xs,
         ),
-        Text(dog.cuidadosEspeciales),
+        Visibility(
+          visible: !editing,
+          replacement: TextField(
+            controller: caresController,
+            maxLines: 4,
+            decoration: InputDecoration(
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(context.radius.xxxl),
+              ),
+            ),
+            onChanged: (value) {
+              setState(() {
+                newCares = value;
+              });
+            },
+          ),
+          child: Text(newCares),
+        ),
       ],
     );
   }

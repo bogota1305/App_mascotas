@@ -3,7 +3,6 @@ import 'dart:convert';
 import 'package:app_mascotas/extensions/dimension_extension.dart';
 import 'package:app_mascotas/extensions/radius_extension.dart';
 import 'package:app_mascotas/home/controller/map_controller.dart';
-import 'package:app_mascotas/home/ui/screens/principal_screen.dart';
 import 'package:app_mascotas/home/ui/widgets/app_bar_dug.dart';
 import 'package:app_mascotas/login/controller/loged_user_controller.dart';
 import 'package:app_mascotas/login/models/accomodation_model.dart';
@@ -11,16 +10,18 @@ import 'package:app_mascotas/login/models/localization_model.dart';
 import 'package:app_mascotas/login/models/user_model.dart';
 import 'package:app_mascotas/login/repository/accommodation_registration_repository.dart';
 import 'package:app_mascotas/login/repository/user_registration_repository.dart';
-import 'package:app_mascotas/login/ui/screens/housing_profile_creation_screen.dart';
-import 'package:app_mascotas/login/ui/screens/user_personal_info_screen.dart';
+import 'package:app_mascotas/login/ui/screens/selection_user_screen.dart';
 import 'package:app_mascotas/theme/colors/dug_colors.dart';
 import 'package:app_mascotas/theme/text/text_size.dart';
 import 'package:app_mascotas/widgets/buttons/principal_button.dart';
 import 'package:app_mascotas/widgets/textFields/registration_text_box.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'dart:io';
 import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
+
+import 'package:image/image.dart' as img;
 
 class HousingSpaceInfo extends StatefulWidget {
   final User user;
@@ -67,7 +68,7 @@ class _HousingSpaceInfoState extends State<HousingSpaceInfo> {
         title: AppBarDug(
           homeScreen: false,
           barContent: Text(
-            'Información de alojamient',
+            'Información de alojamiento',
             style: TextStyle(
               fontSize: context.text.size.md,
               fontWeight: FontWeight.bold,
@@ -260,13 +261,11 @@ class _HousingSpaceInfoState extends State<HousingSpaceInfo> {
     try {
       final pickedImages = await picker.pickMultiImage();
 
-      if (pickedImages != null) {
-        for (final pickedImage in pickedImages) {
-          final imagePath = pickedImage.path;
-          imagePaths.add(imagePath);
-        }
+      for (final pickedImage in pickedImages) {
+        final imagePath = pickedImage.path;
+        imagePaths.add(imagePath);
       }
-    } catch (e) {
+        } catch (e) {
       print('Error al seleccionar imágenes: $e');
     }
 
@@ -319,10 +318,28 @@ class _HousingSpaceInfoState extends State<HousingSpaceInfo> {
     final geocodedData = await mapController.geocodeAddress(address);
     final double latitude = mapController.getLatitude(geocodedData);
     final double longitude = mapController.getLongitude(geocodedData);
-    String userId = '${widget.user.pais}${widget.user.documento}';
+    String userId = widget.user.id ?? '${widget.user.pais}${widget.user.documento}';
+    String accommodationId = '${userId}_Accommodation';
+
+    List<String> newAccommodationImages = [];
+    for (String accommodationImage  in accommodationImages) {
+      final File imageFile = File(accommodationImage);
+      List<int> imageBytes = imageFile.readAsBytesSync();
+
+      img.Image image = img.decodeImage(Uint8List.fromList(imageBytes))!;
+
+      img.Image compressedImage = img.copyResize(image, width: 200);
+
+      List<int> compressedBytes = img.encodePng(compressedImage);
+
+      final String base64Image = base64Encode(compressedBytes);
+      newAccommodationImages.add(base64Image);
+    }
+
+
     Accommodation accommodation = Accommodation(
-      id: '${userId}_Accommodation',
-      photos: accommodationImages,
+      id: accommodationId,
+      photos: newAccommodationImages,
       ubicacion: Localization(
         ciudad: 'Bogotá',
         direccion: address,
@@ -334,21 +351,24 @@ class _HousingSpaceInfoState extends State<HousingSpaceInfo> {
       precioPorNoche: pricePerNight,
       precioPorHora: pricePerHour,
       idUser: userId,
-      tipoDeServicio: '',
+      tipoDeServicio: getTipeOfService(),
       diaInicioDisponibilidad: DateTime.now(),
       diaFinDisponibilidad: DateTime.now(),
       horaFinDisponibilidad: 0,
       horaInicioDisponibilidad: 0,
     );
 
-    User updateUser = widget.user.copyWith(
-        alojamiento: accommodation,
-      );
-
-    accommodationsRegistrationRepository.registerAccommodations(
+    await accommodationsRegistrationRepository.registerAccommodations(
       context,
       accommodation,
     );
+
+
+    User updateUser = widget.user.copyWith(
+        alojamiento: await accommodationsRegistrationRepository.getAccommodationById(accommodationId),
+      );
+
+   
     userRegistrationRepository.updateUser(
       context,
       userId,
@@ -360,8 +380,7 @@ class _HousingSpaceInfoState extends State<HousingSpaceInfo> {
     if (areAllFieldsFilled()) {
       Navigator.of(context).push(
         MaterialPageRoute(
-          builder: (context) => PrincipalScreen(
-            housingUser: true,
+          builder: (context) => SelectionUserScreen(
             logedUserController: widget.logedUserController,
           ), // La siguiente pantalla
         ),
@@ -419,5 +438,21 @@ class _HousingSpaceInfoState extends State<HousingSpaceInfo> {
     } catch (e) {
       print('Error al obtener sugerencias de direcciones: $e');
     }
+  }
+  
+  String getTipeOfService() {
+    String tipoDeServicio = '';
+
+    if(offerNightService){
+      tipoDeServicio = 'Fecha';
+    }
+    if(offerHourlyService){
+      tipoDeServicio = 'Hora';
+    }
+    if(offerNightService && offerHourlyService){
+      tipoDeServicio = 'Ambos';
+    }
+
+    return tipoDeServicio;
   }
 }

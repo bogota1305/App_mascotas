@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
 class SearchHomeRepository {
-  final String url = 'http://192.168.10.15:3000/searches'; 
+  final String url = 'http://157.253.45.208:3000/searches'; 
 
   Future<bool> createSearch(BuildContext context, Search search) async {
     final response = await http.post(

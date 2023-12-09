@@ -1,6 +1,5 @@
 import 'package:app_mascotas/home/controller/map_controller.dart';
 import 'package:app_mascotas/home/controller/search_controller.dart';
-import 'package:app_mascotas/home/model/map_model.dart';
 import 'package:app_mascotas/home/model/search_model.dart';
 import 'package:app_mascotas/home/repository/search_home_repository.dart';
 import 'package:app_mascotas/login/controller/loged_user_controller.dart';
@@ -8,15 +7,13 @@ import 'package:app_mascotas/profile/ui/screens/guest/guest_profile_screen.dart'
 import 'package:app_mascotas/theme/colors/dug_colors.dart';
 import 'package:app_mascotas/theme/text/text_size.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_date_range_picker/flutter_date_range_picker.dart';
-import 'package:flutter_switch/flutter_switch.dart';
 import 'package:time_range_picker/time_range_picker.dart';
 
 class AppBarDug extends StatefulWidget {
   final bool homeScreen;
   final Widget? barContent;
   final bool? housingUser;
-  final SearchController? searchController;
+  final SearchDateController? searchController;
   final LogedUserController logedUserController;
 
   AppBarDug({
@@ -181,10 +178,11 @@ class _AppBarDugState extends State<AppBarDug> {
               );
             } else {
               selectedRange = getDayRange();
+              DateTime hoy = DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
               widget.searchController?.search = Search(
                 tipoDeServicio: 'Fecha',
-                fechaDeInicio: DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day),
-                fechaDeFin: DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day+1, 23, 59, 59),
+                fechaDeInicio: hoy,
+                fechaDeFin: DateTime(hoy.year, hoy.month, hoy.day, 23, 59, 59).add(Duration(days: 1)),
                 horaDeInicio: 0,
                 horaDeFin: 0,
                 ordenamiento:
@@ -323,7 +321,7 @@ class ProfilePhotoButton extends StatelessWidget {
           ),
           CircleAvatar(
             backgroundImage: NetworkImage(
-              'https://media.istockphoto.com/id/1200677760/es/foto/retrato-de-apuesto-joven-sonriente-con-los-brazos-cruzados.jpg?b=1&s=612x612&w=0&k=20&c=3OB0hSUgwzlzUh8ek-6Z2z_XwFKnRE7IOHb1oWvoMZ4=',
+              logedUserController.user.fotos.first,
             ),
             radius: 30,
           ),
@@ -345,7 +343,7 @@ class ProfilePhotoButton extends StatelessWidget {
 }
 
 class SortByDropdown extends StatefulWidget {
-  final SearchController? searchController;
+  final SearchDateController? searchController;
 
   const SortByDropdown({
     Key? key,

@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
 class RequestRepository {
-  final String url = 'http://192.168.10.15:3000/requests';
+  final String url = 'http://157.253.45.208:3000/requests';
 
   Future<bool> createRequest(BuildContext context, RequestModel request) async {
     final response = await http.post(
@@ -52,7 +52,7 @@ class RequestRepository {
     }
   }
 
-  Future<RequestModel?> getRequestById(int requestId) async {
+  Future<RequestModel?> getRequestById(String requestId) async {
     final response = await http.get(Uri.parse('$url/$requestId'));
 
     if (response.statusCode == 200) {
@@ -64,7 +64,7 @@ class RequestRepository {
     }
   }
 
-  Future<void> updateRequest(BuildContext context, int requestId, RequestModel updatedRequest) async {
+  Future<void> updateRequest(BuildContext context, String requestId, RequestModel updatedRequest) async {
     final response = await http.put(
       Uri.parse('$url/$requestId'),
       headers: {'Content-Type': 'application/json'},

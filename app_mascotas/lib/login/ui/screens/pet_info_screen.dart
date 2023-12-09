@@ -1,19 +1,21 @@
+import 'dart:convert';
+
 import 'package:app_mascotas/extensions/dimension_extension.dart';
 import 'package:app_mascotas/extensions/radius_extension.dart';
 import 'package:app_mascotas/home/ui/widgets/app_bar_dug.dart';
 import 'package:app_mascotas/login/controller/loged_user_controller.dart';
 import 'package:app_mascotas/login/models/dog_model.dart';
 import 'package:app_mascotas/login/models/user_model.dart';
-import 'package:app_mascotas/login/ui/screens/housing_space_info_screen.dart';
-import 'package:app_mascotas/login/ui/screens/owner_profile_creation_screen.dart';
 import 'package:app_mascotas/login/ui/screens/pet_profile_creation_screen.dart';
 import 'package:app_mascotas/theme/colors/dug_colors.dart';
 import 'package:app_mascotas/theme/text/text_size.dart';
 import 'package:app_mascotas/widgets/buttons/principal_button.dart';
 import 'package:app_mascotas/widgets/textFields/registration_text_box.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
+import 'package:image/image.dart' as img;
 
 class PetInfoScreen extends StatefulWidget {
   final User user;
@@ -264,13 +266,11 @@ class _PetInfoScreenState extends State<PetInfoScreen> {
               onPressed: () async {
                 final pickedImages = await ImagePicker()
                     .pickMultiImage(); // Abre el selector de imágenes
-                if (pickedImages != null) {
-                  setState(() {
-                    imagePaths.addAll(pickedImages.map((image) => image
-                        .path)); // Agrega las rutas de imágenes seleccionadas a la lista
-                  });
-                }
-              },
+                setState(() {
+                  imagePaths.addAll(pickedImages.map((image) => image
+                      .path)); // Agrega las rutas de imágenes seleccionadas a la lista
+                });
+                            },
               child: Text(
                 'Subir carnet de vacunación',
                 style: TextStyle(fontSize: context.text.size.sm),
@@ -356,14 +356,35 @@ class _PetInfoScreenState extends State<PetInfoScreen> {
   }
 
   void onTapRegistrationButton(BuildContext context) {
-    String userId = '${widget.user.pais}${widget.user.documento}';
+    String userId = widget.user.id ?? '${widget.user.pais}${widget.user.documento}';
     int dogNumber = (widget.user.perros?.length ?? 0) + 1;
+    String dogId = '${userId}_Dog_$dogNumber';
+
+    List<String> newImagePaths = [];
+    for (String imagePath  in imagePaths) {
+      final File imageFile = File(imagePath);
+      List<int> imageBytes = imageFile.readAsBytesSync();
+
+      // Decodifica la imagen
+      img.Image image = img.decodeImage(Uint8List.fromList(imageBytes))!;
+
+      // Optimiza y comprime la imagen (ajusta la calidad según sea necesario)
+      img.Image compressedImage = img.copyResize(image, width: 200);
+
+      // Codifica la imagen comprimida a bytes
+      List<int> compressedBytes = img.encodePng(compressedImage);
+
+      // Convierte los bytes a base64
+      final String base64Image = base64Encode(compressedBytes);
+      newImagePaths.add(base64Image);
+    }
+
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (context) => PetProfileCreationScreen(
           user: widget.user,
           dog: Dog(
-            id: '${userId}_Dog_$dogNumber',
+            id: dogId,
             nombre: firstName,
             fechaNacimiento: birthDate ?? DateTime.now(),
             raza: breed,
@@ -371,7 +392,7 @@ class _PetInfoScreenState extends State<PetInfoScreen> {
             cuidadosEspeciales: specialCares,
             sexo: gender,
             idUser: userId,
-            photos: imagePaths,
+            photos: newImagePaths,
           ),
           logedUserController: widget.logedUserController,
         ), // La siguiente pantalla

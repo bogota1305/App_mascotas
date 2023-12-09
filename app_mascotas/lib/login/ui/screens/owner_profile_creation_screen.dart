@@ -1,8 +1,9 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:app_mascotas/extensions/dimension_extension.dart';
 import 'package:app_mascotas/extensions/radius_extension.dart';
-import 'package:app_mascotas/home/ui/screens/principal_screen.dart';
+import 'package:app_mascotas/home/repository/user_home_repository.dart';
 import 'package:app_mascotas/home/ui/widgets/app_bar_dug.dart';
 import 'package:app_mascotas/login/controller/loged_user_controller.dart';
 import 'package:app_mascotas/login/models/user_model.dart';
@@ -12,7 +13,9 @@ import 'package:app_mascotas/theme/colors/dug_colors.dart';
 import 'package:app_mascotas/theme/text/text_size.dart';
 import 'package:app_mascotas/widgets/buttons/principal_button.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:image/image.dart' as img;
 
 class OwnerProfileCreationScreen extends StatefulWidget {
   final User user;
@@ -38,6 +41,8 @@ class _OwnerProfileCreationScreenState
 
   final UserRegistrationRepository userRegistrationRepository =
       UserRegistrationRepository();
+  
+  final UserHomeRepository userHomeRepository = UserHomeRepository();
 
   @override
   void dispose() {
@@ -58,7 +63,7 @@ class _OwnerProfileCreationScreenState
               fontSize: context.text.size.md,
               fontWeight: FontWeight.bold,
             ),
-          ), 
+          ),
           logedUserController: widget.logedUserController,
         ),
         backgroundColor: DugColors.purple,
@@ -98,13 +103,11 @@ class _OwnerProfileCreationScreenState
               onPressed: () async {
                 final pickedImages = await ImagePicker()
                     .pickMultiImage(); // Abre el selector de imágenes
-                if (pickedImages != null) {
-                  setState(() {
-                    profileImages.addAll(pickedImages.map((image) => image
-                        .path)); // Agrega las rutas de imágenes seleccionadas a la lista
-                  });
-                }
-              },
+                setState(() {
+                  profileImages.addAll(pickedImages.map((image) => image
+                      .path)); // Agrega las rutas de imágenes seleccionadas a la lista
+                });
+                            },
               child: Text('Subir fotos de perfil',
                   style: TextStyle(fontSize: context.text.size.sm)),
             ),
@@ -205,24 +208,46 @@ class _OwnerProfileCreationScreenState
   }
 
   Future<void> onTapProfileButton(BuildContext context) async {
+  
+    List<String> newProfileImages = [];
+    for (String profileImage  in profileImages) {
+      final File imageFile = File(profileImage);
+      List<int> imageBytes = imageFile.readAsBytesSync();
+
+      // Decodifica la imagen
+      img.Image image = img.decodeImage(Uint8List.fromList(imageBytes))!;
+
+      // Optimiza y comprime la imagen (ajusta la calidad según sea necesario)
+      img.Image compressedImage = img.copyResize(image, width: 200);
+
+      // Codifica la imagen comprimida a bytes
+      List<int> compressedBytes = img.encodePng(compressedImage);
+
+      // Convierte los bytes a base64
+      final String base64Image = base64Encode(compressedBytes);
+      newProfileImages.add(base64Image);
+    }
+
     User updatedUser = widget.user.copyWith(
-        descripcion: description, fotos: profileImages, tipo: 'Dueno');
+      descripcion: description,
+      fotos: newProfileImages,
+      tipo: 'Dueno',
+    );
 
-    String userId = '${updatedUser.pais}${updatedUser.documento}';
-
+    String idUser = updatedUser.id ?? '${updatedUser.pais}${updatedUser.documento}';
     userRegistrationRepository.updateUser(
       context,
-      userId,
+      idUser,
       updatedUser,
     );
 
-    widget.logedUserController.user = updatedUser;
+    widget.logedUserController.user = await userHomeRepository.findUserById(idUser);
 
     if (areAllFieldsFilled()) {
       Navigator.of(context).push(
         MaterialPageRoute(
           builder: (context) => PetInfoScreen(
-            user: updatedUser, 
+            user: updatedUser,
             logedUserController: widget.logedUserController,
           ), // La siguiente pantalla
         ),

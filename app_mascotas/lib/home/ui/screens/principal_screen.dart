@@ -37,7 +37,7 @@ class PrincipalScreen extends StatefulWidget {
   const PrincipalScreen({
     super.key,
     required this.housingUser,
-    required this.logedUserController,
+    required this.logedUserController, 
   });
 
   @override
@@ -46,8 +46,9 @@ class PrincipalScreen extends StatefulWidget {
 
 class _PrincipalScreenState extends State<PrincipalScreen> {
   int _currentIndex = 0;
-  SearchController searchController = SearchController();
-  RequestsHousingUsersController requestsHousingUsersController = RequestsHousingUsersController();
+  SearchDateController searchController = SearchDateController();
+  RequestsHousingUsersController requestsHousingUsersController =
+      RequestsHousingUsersController();
 
   @override
   void initState() {
@@ -59,12 +60,18 @@ class _PrincipalScreenState extends State<PrincipalScreen> {
     final List<Widget> _pages = [
       HomeScreen(
         housingUser: widget.housingUser,
-        searchController: searchController, 
-        logedUserController: widget.logedUserController, 
+        searchController: searchController,
+        logedUserController: widget.logedUserController,
         requestsHousingUsersController: requestsHousingUsersController,
       ),
-      FavoritesScreen(),
-      MessageScreen(logedUserController: widget.logedUserController,),
+      FavoritesScreen(
+        housingUser: widget.housingUser,
+        logedUserController: widget.logedUserController,
+        favoritos: widget.logedUserController.favoritos,
+      ),
+      MessageScreen(
+        logedUserController: widget.logedUserController,
+      ),
     ];
 
     return Scaffold(
@@ -75,10 +82,13 @@ class _PrincipalScreenState extends State<PrincipalScreen> {
           title: AppBarDug(
             homeScreen: _currentIndex == 0,
             barContent: _currentIndex != 0
-                ? AppBarNotPrincipalScreen(currentIndex: _currentIndex, logedUserController: widget.logedUserController,)
+                ? AppBarNotPrincipalScreen(
+                    currentIndex: _currentIndex,
+                    logedUserController: widget.logedUserController,
+                    housingUser: widget.housingUser)
                 : null,
             housingUser: widget.housingUser,
-            searchController: searchController, 
+            searchController: searchController,
             logedUserController: widget.logedUserController,
           ),
           shape: ShapeBorder.lerp(
@@ -104,8 +114,8 @@ class _PrincipalScreenState extends State<PrincipalScreen> {
             _currentIndex = index; // Cambia la página actual al hacer clic
           });
         },
-        items: const [
-          BottomNavigationBarItem(
+        items: [
+          const BottomNavigationBarItem(
             icon: Icon(
               Icons.home,
               size: 35,
@@ -119,17 +129,17 @@ class _PrincipalScreenState extends State<PrincipalScreen> {
           ),
           BottomNavigationBarItem(
             icon: Icon(
-              Icons.favorite,
+              widget.housingUser ? Icons.timelapse_rounded : Icons.favorite,
               size: 35,
             ),
-            label: 'Favoritos',
+            label: widget.housingUser ? 'Disponibilidad' : 'Favoritos',
             activeIcon: Icon(
-              Icons.favorite,
+              widget.housingUser ? Icons.timelapse_rounded : Icons.favorite,
               size: 35,
               color: DugColors.blue,
             ),
           ),
-          BottomNavigationBarItem(
+          const BottomNavigationBarItem(
             icon: Icon(
               Icons.message,
               size: 35,
@@ -148,12 +158,14 @@ class _PrincipalScreenState extends State<PrincipalScreen> {
 }
 
 class AppBarNotPrincipalScreen extends StatelessWidget {
+  final bool housingUser;
   final LogedUserController logedUserController;
 
   const AppBarNotPrincipalScreen({
     super.key,
     required int currentIndex,
     required this.logedUserController,
+    required this.housingUser,
   }) : _currentIndex = currentIndex;
 
   final int _currentIndex;
@@ -164,7 +176,11 @@ class AppBarNotPrincipalScreen extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         Text(
-          _currentIndex == 1 ? 'Favoritos' : 'Mensajes',
+          _currentIndex == 1
+              ? housingUser
+                  ? 'Disponibilidad'
+                  : 'Favoritos'
+              : 'Mensajes',
           style: TextStyle(
             fontSize: context.text.size.lg,
             fontWeight: FontWeight.bold,
@@ -173,7 +189,11 @@ class AppBarNotPrincipalScreen extends StatelessWidget {
         SizedBox(
           width: context.spacing.xxxs,
         ),
-        Icon(_currentIndex == 1 ? Icons.favorite : Icons.message),
+        Icon(_currentIndex == 1
+            ? housingUser
+                ? Icons.timelapse_outlined
+                : Icons.favorite
+            : Icons.message),
         Spacer(),
         InkWell(
           onTap: () {
@@ -203,9 +223,7 @@ class AppBarNotPrincipalScreen extends StatelessWidget {
                 width: 12,
               ),
               CircleAvatar(
-                backgroundImage: NetworkImage(
-                  'https://media.istockphoto.com/id/1200677760/es/foto/retrato-de-apuesto-joven-sonriente-con-los-brazos-cruzados.jpg?b=1&s=612x612&w=0&k=20&c=3OB0hSUgwzlzUh8ek-6Z2z_XwFKnRE7IOHb1oWvoMZ4=',
-                ),
+                backgroundImage: NetworkImage( logedUserController.user.fotos.first,),
                 radius: 30,
               ),
             ],

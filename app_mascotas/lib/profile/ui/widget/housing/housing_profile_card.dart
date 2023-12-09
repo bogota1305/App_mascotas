@@ -35,7 +35,9 @@ class HosingProfileCard extends StatelessWidget {
               spreadRadius: 2, // Cuán extendida estará la sombra
               blurRadius: 5, // Cuán desenfocada estará la sombra
               offset: const Offset(
-                  5, 3), // Offset de la sombra (horizontal, vertical)
+                5,
+                3,
+              ), 
             ),
           ],
         ),
@@ -45,9 +47,9 @@ class HosingProfileCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Container(
-                color: DugColors.blue,
                 height: 175,
                 width: 125,
+                child: Image.network(image),
               ),
               SizedBox(
                 width: 15,
@@ -58,15 +60,15 @@ class HosingProfileCard extends StatelessWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(
-                        name,
-                        style: TextStyle(
-                          fontSize: context.text.size.md,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
                       SizedBox(
-                        width: 20,
+                        width: 110,
+                        child: Text(
+                          name,
+                          style: TextStyle(
+                            fontSize: context.text.size.md,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                       ),
                       Icon(Icons.star),
                       Text(rating.toString()),

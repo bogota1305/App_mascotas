@@ -5,7 +5,7 @@ import 'package:http/http.dart' as http;
 
 class UserRegistrationRepository  {
   
-  final String url = 'http://192.168.10.15:3000/users'; 
+  final String url = 'http://157.253.45.208:3000/users'; 
 
 
   Future<bool> registerUser(BuildContext context, User user) async{  
@@ -17,10 +17,7 @@ class UserRegistrationRepository  {
   );
 
     if (response.statusCode == 201) {
-      final responseData = jsonDecode(response.body);
-
       return true;
-     
     } else {
       String errorMessage = 'Hubo un problema al registrarse. Por favor, inténtalo de nuevo.';
       final dynamic responseData = jsonDecode(response.body);
@@ -54,10 +51,7 @@ class UserRegistrationRepository  {
       body: jsonEncode(updatedUser.toJson()),
     );
 
-    if (response.statusCode == 200) {
-      final responseData = jsonDecode(response.body);
-      // El usuario se ha actualizado correctamente.
-    } else {
+    if (response.statusCode != 200){
       showDialog(
         context: context,
         builder: (context) => AlertDialog(

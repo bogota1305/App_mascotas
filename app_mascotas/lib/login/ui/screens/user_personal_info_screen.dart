@@ -1,19 +1,22 @@
+import 'dart:convert';
+
 import 'package:app_mascotas/extensions/dimension_extension.dart';
 import 'package:app_mascotas/extensions/radius_extension.dart';
+import 'package:app_mascotas/home/repository/user_home_repository.dart';
 import 'package:app_mascotas/home/ui/widgets/app_bar_dug.dart';
 import 'package:app_mascotas/login/controller/loged_user_controller.dart';
-import 'package:app_mascotas/login/models/accomodation_model.dart';
 import 'package:app_mascotas/login/models/user_model.dart';
-import 'package:app_mascotas/login/repository/user_registration_repository.dart';
+import 'package:app_mascotas/login/repository/auth_repository.dart';
 import 'package:app_mascotas/login/ui/screens/housing_profile_creation_screen.dart';
-import 'package:app_mascotas/login/ui/screens/housing_space_info_screen.dart';
 import 'package:app_mascotas/login/ui/screens/owner_profile_creation_screen.dart';
 import 'package:app_mascotas/theme/colors/dug_colors.dart';
 import 'package:app_mascotas/theme/text/text_size.dart';
 import 'package:app_mascotas/widgets/buttons/principal_button.dart';
 import 'package:app_mascotas/widgets/textFields/registration_text_box.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:image/image.dart' as img;
 import 'dart:io';
 
 enum UserTipe { housing, owner }
@@ -54,13 +57,14 @@ class _UserPersonalInfoScreenState extends State<UserPersonalInfoScreen> {
   final prefixCellphoneController = TextEditingController();
   final passwordController = TextEditingController();
   final repeatPasswordController = TextEditingController();
-  final UserRegistrationRepository userRegistrationRepository =
-      UserRegistrationRepository();
 
   bool isEmailValid = true;
   bool isPasswordValid = true;
   bool arePasswordsMatching = true;
   bool isPhoneValid = true;
+
+  final AuthRepository authRepository = AuthRepository();
+  final UserHomeRepository userHomeRepository = UserHomeRepository();
 
   @override
   void dispose() {
@@ -357,10 +361,11 @@ class _UserPersonalInfoScreenState extends State<UserPersonalInfoScreen> {
                             underline:
                                 Container(), // Elimina la línea por defecto del DropdownButton
                             style: TextStyle(
-                                color: Colors
-                                    .black), // Cambia el color del texto del botón
-                            icon: Icon(Icons
-                                .arrow_drop_down), // Agrega un ícono de flecha hacia abajo
+                              color: Colors.black,
+                            ), // Cambia el color del texto del botón
+                            icon: Icon(
+                              Icons.arrow_drop_down,
+                            ), // Agrega un ícono de flecha hacia abajo
                             iconSize: 36.0, // Ajusta el tamaño del ícono
                             elevation:
                                 16, // Cambia la elevación de la lista desplegable
@@ -411,13 +416,11 @@ class _UserPersonalInfoScreenState extends State<UserPersonalInfoScreen> {
               onPressed: () async {
                 final pickedImages = await ImagePicker()
                     .pickMultiImage(); // Abre el selector de imágenes
-                if (pickedImages != null) {
-                  setState(() {
-                    imagePaths.addAll(pickedImages.map((image) => image
-                        .path)); // Agrega las rutas de imágenes seleccionadas a la lista
-                  });
-                }
-              },
+                setState(() {
+                  imagePaths.addAll(pickedImages.map((image) => image
+                      .path)); // Agrega las rutas de imágenes seleccionadas a la lista
+                });
+                            },
               child: Text('Subir Documento de Identidad',
                   style: TextStyle(fontSize: context.text.size.sm)),
             ),
@@ -507,12 +510,31 @@ class _UserPersonalInfoScreenState extends State<UserPersonalInfoScreen> {
   }
 
   Future<void> onTapRegistrationButton(BuildContext context) async {
+    List<String> newImagePaths = [];
+    for (String imagePath  in imagePaths) {
+      final File imageFile = File(imagePath);
+      List<int> imageBytes = imageFile.readAsBytesSync();
+
+      // Decodifica la imagen
+      img.Image image = img.decodeImage(Uint8List.fromList(imageBytes))!;
+
+      // Optimiza y comprime la imagen (ajusta la calidad según sea necesario)
+      img.Image compressedImage = img.copyResize(image, width: 200);
+
+      // Codifica la imagen comprimida a bytes
+      List<int> compressedBytes = img.encodePng(compressedImage);
+
+      // Convierte los bytes a base64
+      final String base64Image = base64Encode(compressedBytes);
+      newImagePaths.add(base64Image);
+    }
+
     User user = User(
       nombre: firstName,
       apellidos: lastName,
       fotos: [],
       descripcion: '',
-      contrasena: '',
+      contrasena: password,
       fechaNacimiento: birthDate ?? DateTime.now(),
       correo: email,
       tipo: '',
@@ -522,26 +544,34 @@ class _UserPersonalInfoScreenState extends State<UserPersonalInfoScreen> {
       tipoDocumento: idType,
       documento: documentNumber,
       pais: 'Colombia',
-      fotosDocumento: imagePaths,
+      fotosDocumento: newImagePaths, //TODO
       calificaciones: [],
       calificacionPromedio: 0,
       solicitudesCreadas: [],
       solicitudesRecibidas: [],
+      cuidadoresFavoritos: [],
     );
 
-    final bool succes = await userRegistrationRepository.registerUser(
+    final bool succes = await authRepository.registerUser(
       context,
       user,
     );
 
-    widget.logedUserController.user = user; 
+    String idUser = user.pais + user.documento;
+    widget.logedUserController.user = await userHomeRepository.findUserById(idUser);
 
     if (succes) {
       Navigator.of(context).push(
         MaterialPageRoute(
           builder: (context) => widget.userTipe == UserTipe.housing
-              ? HousingProfileCreationScreen(user: user, logedUserController: widget.logedUserController,)
-              : OwnerProfileCreationScreen(user: user, logedUserController: widget.logedUserController,),
+              ? HousingProfileCreationScreen(
+                  user: user,
+                  logedUserController: widget.logedUserController,
+                )
+              : OwnerProfileCreationScreen(
+                  user: user,
+                  logedUserController: widget.logedUserController,
+                ),
         ),
       );
     }

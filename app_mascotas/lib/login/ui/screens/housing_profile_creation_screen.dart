@@ -1,20 +1,21 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:app_mascotas/extensions/dimension_extension.dart';
 import 'package:app_mascotas/extensions/radius_extension.dart';
-import 'package:app_mascotas/home/ui/screens/principal_screen.dart';
+import 'package:app_mascotas/home/repository/user_home_repository.dart';
 import 'package:app_mascotas/home/ui/widgets/app_bar_dug.dart';
 import 'package:app_mascotas/login/controller/loged_user_controller.dart';
-import 'package:app_mascotas/login/models/accomodation_model.dart';
 import 'package:app_mascotas/login/models/user_model.dart';
-import 'package:app_mascotas/login/repository/accommodation_registration_repository.dart';
 import 'package:app_mascotas/login/repository/user_registration_repository.dart';
 import 'package:app_mascotas/login/ui/screens/housing_space_info_screen.dart';
 import 'package:app_mascotas/theme/colors/dug_colors.dart';
 import 'package:app_mascotas/theme/text/text_size.dart';
 import 'package:app_mascotas/widgets/buttons/principal_button.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:image/image.dart' as img;
 
 class HousingProfileCreationScreen extends StatefulWidget {
   final User user;
@@ -39,6 +40,7 @@ class _HousingProfileCreationScreenState
   final descriptionController = TextEditingController();
   final UserRegistrationRepository userRegistrationRepository =
       UserRegistrationRepository();
+  final UserHomeRepository userHomeRepository = UserHomeRepository();
 
   @override
   void dispose() {
@@ -99,13 +101,11 @@ class _HousingProfileCreationScreenState
               onPressed: () async {
                 final pickedImages = await ImagePicker()
                     .pickMultiImage(); // Abre el selector de imágenes
-                if (pickedImages != null) {
-                  setState(() {
-                    profileImages.addAll(pickedImages.map((image) => image
-                        .path)); // Agrega las rutas de imágenes seleccionadas a la lista
-                  });
-                }
-              },
+                setState(() {
+                  profileImages.addAll(pickedImages.map((image) => image
+                      .path)); // Agrega las rutas de imágenes seleccionadas a la lista
+                });
+                            },
               child: Text('Subir fotos de perfil',
                   style: TextStyle(fontSize: context.text.size.sm)),
             ),
@@ -206,9 +206,30 @@ class _HousingProfileCreationScreenState
   }
 
   Future<void> onTapProfileButton(BuildContext context) async {
+
+    List<String> newProfileImages = [];
+    for (String profileImage  in profileImages) {
+      final File imageFile = File(profileImage);
+      List<int> imageBytes = imageFile.readAsBytesSync();
+
+      // Decodifica la imagen
+      img.Image image = img.decodeImage(Uint8List.fromList(imageBytes))!;
+
+      // Optimiza y comprime la imagen (ajusta la calidad según sea necesario)
+      img.Image compressedImage = img.copyResize(image, width: 200);
+
+      // Codifica la imagen comprimida a bytes
+      List<int> compressedBytes = img.encodePng(compressedImage);
+
+      // Convierte los bytes a base64
+      final String base64Image = base64Encode(compressedBytes);
+      newProfileImages.add(base64Image);
+    }
+
+    
     User updatedUser = widget.user.copyWith(
       descripcion: description,
-      fotos: profileImages,
+      fotos: newProfileImages,
       tipo: 'Cuidador',
     );
 
@@ -220,7 +241,7 @@ class _HousingProfileCreationScreenState
       updatedUser,
     );
 
-    widget.logedUserController.user = updatedUser;
+    widget.logedUserController.user = await userHomeRepository.findUserById(userId);
 
     if (areAllFieldsFilled()) {
       Navigator.of(context).push(

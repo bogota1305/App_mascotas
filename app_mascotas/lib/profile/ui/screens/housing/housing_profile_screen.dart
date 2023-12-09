@@ -5,6 +5,7 @@ import 'package:app_mascotas/login/controller/loged_user_controller.dart';
 import 'package:app_mascotas/login/models/accomodation_model.dart';
 import 'package:app_mascotas/login/models/dog_model.dart';
 import 'package:app_mascotas/login/models/user_model.dart';
+import 'package:app_mascotas/login/repository/user_registration_repository.dart';
 import 'package:app_mascotas/profile/ui/widget/housing/housing_card.dart';
 import 'package:app_mascotas/profile/ui/widget/housing/housing_profile_card.dart';
 import 'package:app_mascotas/profile/ui/widget/housing/housing_resume_reservation_card.dart';
@@ -13,7 +14,7 @@ import 'package:app_mascotas/theme/text/text_size.dart';
 import 'package:flutter/material.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 
-class HousingProfileScreen extends StatelessWidget {
+class HousingProfileScreen extends StatefulWidget {
   final User user;
   final Accommodation alojamiento;
   final List<Dog> perros;
@@ -23,8 +24,9 @@ class HousingProfileScreen extends StatelessWidget {
   final int inicioHoraReserva;
   final int finHoraReserva;
   final LogedUserController logedUserController;
+  bool? favorito;
 
-  const HousingProfileScreen({
+  HousingProfileScreen({
     super.key,
     required this.user,
     required this.alojamiento,
@@ -33,12 +35,26 @@ class HousingProfileScreen extends StatelessWidget {
     required this.inicioDiaReserva,
     required this.finDiaReserva,
     required this.inicioHoraReserva,
-    required this.finHoraReserva, 
+    required this.finHoraReserva,
     required this.logedUserController,
+    this.favorito,
   });
 
   @override
+  State<HousingProfileScreen> createState() => _HousingProfileScreenState();
+}
+
+class _HousingProfileScreenState extends State<HousingProfileScreen> {
+  final UserRegistrationRepository userRegistrationRepository =
+      UserRegistrationRepository();
+
+  @override
   Widget build(BuildContext context) {
+    List<String> cuidadoresFavoritos =
+        widget.logedUserController.user.cuidadoresFavoritos;
+    if (widget.favorito == null) {
+      widget.favorito = isFavorite();
+    }
     return Scaffold(
       appBar: AppBar(
         title: AppBarDug(
@@ -53,17 +69,48 @@ class HousingProfileScreen extends StatelessWidget {
                 ),
               ),
               Spacer(),
-              IconButton(
-                onPressed: () {},
-                icon: Icon(Icons.favorite, color: DugColors.white),
+              Visibility(
+                visible: widget.logedUserController.user.id != 'Guest',
+                child: IconButton(
+                  onPressed: () {
+                    String idCuidador = widget.user.id ??
+                        '${widget.user.pais}${widget.user.documento}';
+                    String idUser = widget.logedUserController.user.id ??
+                        '${widget.logedUserController.user.pais}${widget.logedUserController.user.documento}';
+
+                    if (widget.favorito ?? false) {
+                      cuidadoresFavoritos.remove(idCuidador);
+                      widget.favorito = false;
+                    } else {
+                      cuidadoresFavoritos.add(idCuidador);
+                      widget.favorito = true;
+                    }
+
+                    User userUpdated = widget.logedUserController.user
+                        .copyWith(cuidadoresFavoritos: cuidadoresFavoritos);
+                    userRegistrationRepository.updateUser(
+                        context, idUser, userUpdated);
+                    widget.logedUserController.user = userUpdated;
+                    setState(() {});
+                  },
+                  icon: Icon(
+                    Icons.favorite,
+                    color: (widget.favorito ?? false)
+                        ? DugColors.orange
+                        : DugColors.white,
+                  ),
+                ),
               ),
               IconButton(
                 onPressed: () {},
-                icon: Icon(Icons.share, color: DugColors.white),
+                icon: Icon(
+                  Icons.share,
+                  color: DugColors.white,
+                ),
               )
             ],
           ),
-          logedUserController: logedUserController,
+          logedUserController: widget.logedUserController,
         ),
         backgroundColor: DugColors.blue,
       ),
@@ -75,20 +122,11 @@ class HousingProfileScreen extends StatelessWidget {
                 SizedBox(
                   height: 200,
                   child: CarouselSlider(
-                    items: [
-                      Image.network(
-                          'https://pics.nuroa.com/casa_en_venta_en_bogota_bosque_de_pinos_4300006692099552305.jpg'),
-                      Image.network(
-                          'https://pics.nuroa.com/casa_en_venta_en_bogota_bosque_de_pinos_4300006692099552305.jpg'),
-                      Image.network(
-                          'https://pics.nuroa.com/casa_en_venta_en_bogota_bosque_de_pinos_4300006692099552305.jpg'),
-                      Image.network(
-                          'https://pics.nuroa.com/casa_en_venta_en_bogota_bosque_de_pinos_4300006692099552305.jpg'),
-                    ].map((image) {
+                    items: widget.alojamiento.photos.map((imageUrl) {
                       return Container(
                         color: DugColors.black,
                         height: 50,
-                        child: image,
+                        child: Image.network(imageUrl),
                       );
                     }).toList(),
                     options: CarouselOptions(
@@ -105,39 +143,67 @@ class HousingProfileScreen extends StatelessWidget {
                 ),
                 SizedBox(height: context.spacing.md),
                 HousingCard(
-                  location: alojamiento.ubicacion.direccion,
-                  pricePerNight: alojamiento.precioPorNoche.toInt().toString(),
-                  pricePerHour: alojamiento.precioPorHora.toInt().toString(),
-                  ownDogs: perros.length,
+                  location: widget.alojamiento.ubicacion.direccion,
+                  pricePerNight:
+                      widget.alojamiento.precioPorNoche.toInt().toString(),
+                  pricePerHour:
+                      widget.alojamiento.precioPorHora.toInt().toString(),
+                  ownDogs: widget.perros.length,
                   housingDogs: 0,
                 ),
                 SizedBox(height: context.spacing.xl),
                 HosingProfileCard(
-                  image: user.fotos.isNotEmpty ? user.fotos.first : '',
-                  name: user.nombre,
-                  description: user.descripcion,
-                  rating: user.calificacionPromedio,
+                  image: widget.user.fotos.isNotEmpty
+                      ? widget.user.fotos.first
+                      : '',
+                  name: widget.user.nombre,
+                  description: widget.user.descripcion,
+                  rating: widget.user.calificacionPromedio,
                 ),
-                SizedBox(height: 130),
+                SizedBox(
+                    height: widget.tipoReserva != '' &&
+                            widget.logedUserController.user.id != 'Guest'
+                        ? 130
+                        : 20),
               ],
             ),
           ),
-          Align(
-            alignment: Alignment.bottomCenter,
-            child: HousingResumeReservationCard(
-              tipoReserva: tipoReserva,
-              inicioDiaReserva: inicioDiaReserva,
-              finDiaReserva: finDiaReserva,
-              inicioHoraReserva: inicioHoraReserva,
-              finHoraReserva: finHoraReserva, 
-              logedUserController: logedUserController, 
-              user: user, 
-              alojamiento: alojamiento,
+          Visibility(
+            visible: widget.tipoReserva != '' &&
+                widget.logedUserController.user.id != 'Guest',
+            child: Align(
+              alignment: Alignment.bottomCenter,
+              child: HousingResumeReservationCard(
+                tipoReserva: widget.tipoReserva,
+                inicioDiaReserva: widget.inicioDiaReserva,
+                finDiaReserva: widget.finDiaReserva,
+                inicioHoraReserva: widget.inicioHoraReserva,
+                finHoraReserva: widget.finHoraReserva,
+                logedUserController: widget.logedUserController,
+                user: widget.user,
+                alojamiento: widget.alojamiento,
+              ),
             ),
           )
         ],
       ),
     );
+  }
+
+  bool isFavorite() {
+    bool favorito = false;
+    List<String> listaDeFavoritos =
+        widget.logedUserController.user.cuidadoresFavoritos;
+    String idCuidador =
+        widget.user.id ?? '${widget.user.pais}${widget.user.documento}';
+
+    for (String idFavorito in listaDeFavoritos) {
+      if (idFavorito == idCuidador) {
+        favorito = true;
+      }
+    }
+
+    return favorito;
   }
 }
 

@@ -5,7 +5,7 @@ import 'package:http/http.dart' as http;
 
 class DogRegistrationRepository  {
   
-  final String url = 'http://192.168.10.15:3000/dogs'; 
+  final String url = 'http://157.253.45.208:3000/dogs'; 
 
 
   Future<void> registerDog(BuildContext context, Dog dog) async{  
@@ -16,10 +16,7 @@ class DogRegistrationRepository  {
     body: jsonEncode(dog.toJson()),
   );
 
-    if (response.statusCode == 201) {
-      final responseData = jsonDecode(response.body);
-     
-    } else {
+    if (response.statusCode != 201) {
       showDialog(
         context: context,
         builder: (context) => AlertDialog(
@@ -35,6 +32,20 @@ class DogRegistrationRepository  {
           ],
         ),
       );
+    }
+  }
+
+  Future<Dog> getDogById(String id) async {
+    final response = await http.get(
+      Uri.parse('$url/$id'), 
+      headers: {'Content-Type': 'application/json'},
+    );
+
+    if (response.statusCode == 200) {
+      final responseData = jsonDecode(response.body);
+      return Dog.fromJson(responseData);
+    } else {
+      throw Exception('Error al obtener el perro por ID');
     }
   }
 

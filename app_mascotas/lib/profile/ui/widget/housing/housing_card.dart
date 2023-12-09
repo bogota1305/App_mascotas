@@ -47,19 +47,12 @@ class HousingCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Row(
-                children: [
-                  Text(
-                    'Alojamiento',
-                    style: TextStyle(
-                      fontSize: context.text.size.md,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  Spacer(),
-                  Icon(Icons.star),
-                  Text('4.5'),
-                ],
+              Text(
+                'Alojamiento',
+                style: TextStyle(
+                  fontSize: context.text.size.md,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               SizedBox(
                 height: 25,

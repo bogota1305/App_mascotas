@@ -3,7 +3,7 @@ import 'package:app_mascotas/login/models/user_model.dart';
 import 'package:http/http.dart' as http;
 
 class UserHomeRepository {
-  final String url = 'http://192.168.10.15:3000';  // URL de tu API
+  final String url = 'http://157.253.45.208:3000';  // URL de tu API
 
   Future<List<User>> getUsers() async {
     final response = await http.get(Uri.parse('$url/users'));

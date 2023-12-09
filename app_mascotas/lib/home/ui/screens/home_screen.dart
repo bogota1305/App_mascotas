@@ -7,7 +7,6 @@ import 'package:app_mascotas/home/controller/users_list_controller.dart';
 import 'package:app_mascotas/home/model/search_model.dart';
 import 'package:app_mascotas/home/repository/search_home_repository.dart';
 import 'package:app_mascotas/home/repository/user_home_repository.dart';
-import 'package:app_mascotas/home/ui/widgets/app_bar_dug.dart';
 import 'package:app_mascotas/home/ui/widgets/map_home.dart';
 import 'package:app_mascotas/login/controller/loged_user_controller.dart';
 import 'package:app_mascotas/login/models/accomodation_model.dart';
@@ -25,13 +24,12 @@ import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:flutter_switch/flutter_switch.dart';
-import 'package:time_range_picker/time_range_picker.dart';
 
 enum NavigationEvent { home, pet, favorite, message, profile }
 
 class HomeScreen extends StatefulWidget {
   final bool housingUser;
-  final SearchController searchController;
+  final SearchDateController searchController;
   final LogedUserController logedUserController;
   final RequestsHousingUsersController requestsHousingUsersController;
 
@@ -60,6 +58,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   bool cargando = false;
   bool activeService = false;
+  bool activeServiceVisibility = false;
   User activeServiceUser = User(
     id: 'Guest',
     nombre: 'Guest',
@@ -81,6 +80,7 @@ class _HomeScreenState extends State<HomeScreen> {
     calificacionPromedio: 0,
     solicitudesCreadas: [],
     solicitudesRecibidas: [],
+    cuidadoresFavoritos: [],
   );
   RequestModel activeRequest = RequestModel(
     estado: '',
@@ -105,6 +105,14 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     if (widget.housingUser) {
+      widget.searchController.search = Search(
+        tipoDeServicio: 'Ambos',
+        fechaDeInicio: DateTime.now(),
+        fechaDeFin: DateTime.now(),
+        horaDeInicio: 0,
+        horaDeFin: 0,
+        ordenamiento: '',
+      );
       _getDuenos();
     } else {
       _getCuidadores();
@@ -130,7 +138,7 @@ class _HomeScreenState extends State<HomeScreen> {
           await usersListController.getCuidadoresDisponibles(
         widget.searchController.search,
         widget.requestsHousingUsersController,
-        widget.logedUserController.user,
+        widget.logedUserController,
       );
       cuidadoresData = usersListController.orderCuidadoresByAttribute(
         cuidadoresData,
@@ -143,6 +151,7 @@ class _HomeScreenState extends State<HomeScreen> {
           in widget.logedUserController.user.solicitudesCreadas) {
         if (request.estado == 'Aceptada') {
           activeService = isActiveService(request);
+          activeServiceVisibility = activeService;
           if (activeService) {
             activeServiceUser = await userHomeRepository
                 .findUserById(request.idUsuarioSolicitado);
@@ -163,7 +172,7 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
-  Future<void> _getDuenos() async {
+  Future<void> _getDuenos({bool? visible}) async {
     listaUsuariosSolicitudesAceptadas = [];
     setState(() {
       cargando = true;
@@ -180,6 +189,7 @@ class _HomeScreenState extends State<HomeScreen> {
       for (User dueno in duenosData) {
         if (dueno.solicitudesCreadas.first.estado == 'Aceptada') {
           activeService = isActiveService(dueno.solicitudesCreadas.first);
+          activeServiceVisibility = visible ?? activeService;
           listaUsuariosSolicitudesAceptadas.add(dueno);
           if (activeService) {
             activeServiceUser = dueno;
@@ -281,26 +291,44 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    Dog defaultDog = Dog(
+      nombre: '',
+      fechaNacimiento: DateTime.now(),
+      raza: '',
+      personalidad: '',
+      cuidadosEspeciales: '',
+      sexo: '',
+      idUser: '',
+      photos: [],
+    );
     return Column(
       children: [
         Expanded(
           child: Visibility(
-            visible: !activeService,
-            replacement: ActiveServiceCard(
-              widget: widget,
-              user: activeServiceUser,
-              perro: activeServiceUser.perros?.first ??
-                  Dog(
-                    nombre: '',
-                    fechaNacimiento: DateTime.now(),
-                    raza: '',
-                    personalidad: '',
-                    cuidadosEspeciales: '',
-                    sexo: '',
-                    idUser: '',
-                    photos: [],
-                  ),
-              servicio: activeRequest,
+            visible: !activeService || !activeServiceVisibility,
+            replacement: Column(
+              children: [
+                ActiveServiceCard(
+                  widget: widget,
+                  user: activeServiceUser,
+                  perro: activeServiceUser.perros?.isNotEmpty ?? false
+                      ? activeServiceUser.perros?.first ?? defaultDog
+                      : defaultDog,
+                  servicio: activeRequest,
+                ),
+                PrincipalButton(
+                  onPressed: () {
+                    setState(() {
+                      activeServiceVisibility = false;
+                    });
+                  },
+                  text: widget.housingUser
+                      ? 'Ver solicitudes'
+                      : 'Ver alojamientos',
+                  backgroundColor:
+                      widget.housingUser ? DugColors.orange : DugColors.blue,
+                )
+              ],
             ),
             child: Stack(
               children: [
@@ -315,6 +343,8 @@ class _HomeScreenState extends State<HomeScreen> {
                       searchController: widget.searchController,
                       mapController: mapController,
                       logedUserController: widget.logedUserController,
+                      veterinary:
+                          widget.logedUserController.user.clinicaVeterinaria,
                     ),
                   ),
                   child: HousingOrRequestCardList(
@@ -325,6 +355,70 @@ class _HomeScreenState extends State<HomeScreen> {
                     cargando: cargando,
                     logedUserController: widget.logedUserController,
                     showAceptedRequests: showAceptedRequests,
+                  ),
+                ),
+                Visibility(
+                  visible: showMap,
+                  child: Padding(
+                    padding: EdgeInsets.all(context.spacing.sm),
+                    child: Container(
+                      height: 50,
+                      decoration: BoxDecoration(
+                        color: DugColors.white,
+                        borderRadius: BorderRadius.all(
+                          Radius.circular(
+                            context.radius.xl,
+                          ),
+                        ),
+                        border: Border.all(
+                          color: DugColors.blue,
+                          width: 2,
+                        )
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Container(
+                            height: 25,
+                            width: 25,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: Colors.purple,
+                            ),
+                          ),
+                          SizedBox(width: 5,),
+                          Text(
+                            'Casa'
+                          ),
+                          SizedBox(width: 25,),
+                          Container(
+                            height: 25,
+                            width: 25,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: Colors.cyan,
+                            ),
+                          ),
+                          SizedBox(width: 5,),
+                          Text(
+                            'Veterinaria'
+                          ),
+                          SizedBox(width: 25,),
+                          Container(
+                            height: 25,
+                            width: 25,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: Colors.red,
+                            ),
+                          ),
+                          SizedBox(width: 5,),
+                          Text(
+                            'Cuidadores'
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
                 ),
                 Column(
@@ -384,7 +478,8 @@ class _HomeScreenState extends State<HomeScreen> {
                           Visibility(
                             visible: widget.requestsHousingUsersController.users
                                     .isNotEmpty &&
-                                !showMap,
+                                !showMap &&
+                                !activeService,
                             child: Padding(
                               padding: const EdgeInsets.only(left: 20),
                               child: Column(
@@ -424,6 +519,30 @@ class _HomeScreenState extends State<HomeScreen> {
                               ),
                             ),
                           ),
+                          Visibility(
+                            visible: activeService,
+                            child: SizedBox(
+                              width: 40,
+                            ),
+                          ),
+                          Visibility(
+                            visible: activeService,
+                            child: SizedBox(
+                              width: 120,
+                              child: PrincipalButton(
+                                onPressed: () {
+                                  setState(() {
+                                    activeServiceVisibility = true;
+                                  });
+                                },
+                                text: 'Servicio',
+                                backgroundColor: widget.housingUser
+                                    ? DugColors.orange
+                                    : DugColors.blue,
+                                padding: 0,
+                              ),
+                            ),
+                          )
                         ],
                       ),
                     ),
@@ -433,7 +552,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     PrincipalButton(
                       onPressed: () {
                         if (widget.housingUser) {
-                          _getDuenos();
+                          _getDuenos(visible: false);
                         } else {
                           _getCuidadores();
                         }
@@ -499,22 +618,26 @@ class ActiveServiceCard extends StatelessWidget {
             child: Column(
               children: [
                 Container(
-                  height: 390,
+                  height: 340,
                   child: Stack(
                     children: [
                       Container(
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.all(
-                              Radius.circular(context.radius.xl)),
+                            Radius.circular(context.radius.xl),
+                          ),
+                          color: DugColors.black.withOpacity(0.1),
                         ),
-                        child: Image(
-                          image: NetworkImage(
-                            'https://media.istockphoto.com/id/1200677760/es/foto/retrato-de-apuesto-joven-sonriente-con-los-brazos-cruzados.jpg?b=1&s=612x612&w=0&k=20&c=3OB0hSUgwzlzUh8ek-6Z2z_XwFKnRE7IOHb1oWvoMZ4=',
+                        child: Center(
+                          child: Image(
+                            image: NetworkImage(
+                              'https://media.istockphoto.com/id/1200677760/es/foto/retrato-de-apuesto-joven-sonriente-con-los-brazos-cruzados.jpg?b=1&s=612x612&w=0&k=20&c=3OB0hSUgwzlzUh8ek-6Z2z_XwFKnRE7IOHb1oWvoMZ4=',
+                            ),
                           ),
                         ),
                       ),
                       Padding(
-                        padding: const EdgeInsets.only(top: 320),
+                        padding: const EdgeInsets.only(top: 270),
                         child: Container(
                           height: 70,
                           decoration: BoxDecoration(
@@ -537,13 +660,16 @@ class ActiveServiceCard extends StatelessWidget {
                                       ? perro.nombre
                                       : user.nombre,
                                   style: TextStyle(
-                                      color: DugColors.white,
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 25),
+                                    color: DugColors.white,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 25,
+                                  ),
                                 ),
                                 InfoItem(
                                   icon: Icons.star,
-                                  name: '4.6',
+                                  name: widget.housingUser
+                                      ? '4.5' //TODO
+                                      : user.calificacionPromedio.toString(),
                                   textSize: 25,
                                   textColor: DugColors.white,
                                   colorIcon: DugColors.white,
@@ -570,8 +696,10 @@ class ActiveServiceCard extends StatelessWidget {
                             children: [
                               InfoItem(
                                 icon: Icons.location_on,
-                                name: 'Calle 123 #4 - 5',
+                                name:
+                                    user.alojamiento?.ubicacion.direccion ?? '',
                                 textSize: 18,
+                                sizeContainer: 255,
                               ),
                               SizedBox(
                                 height: 20,
@@ -688,7 +816,7 @@ class HousingOrRequestCardList extends StatelessWidget {
     required this.mapController,
     required this.cargando,
     required this.logedUserController,
-    required this.showAceptedRequests, 
+    required this.showAceptedRequests,
   });
 
   final List<User> listaUsusarios;
@@ -755,7 +883,7 @@ class HousingOrRequestCardList extends StatelessWidget {
                       alojamiento: listaUsusarios[i].alojamiento ??
                           defaultAccommodation(),
                       housing: listaUsusarios[i].tipo == 'Cuidador',
-                      favorite: false,
+                      favorite: listaUsusarios[i].favorite ?? false,
                       perros: listaUsusarios[i].perros ?? [],
                       tipoReserva: search.tipoDeServicio,
                       inicioDiaReserva: search.fechaDeInicio,

@@ -1,20 +1,22 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:app_mascotas/extensions/dimension_extension.dart';
 import 'package:app_mascotas/extensions/radius_extension.dart';
-import 'package:app_mascotas/home/ui/screens/principal_screen.dart';
 import 'package:app_mascotas/home/ui/widgets/app_bar_dug.dart';
 import 'package:app_mascotas/login/controller/loged_user_controller.dart';
 import 'package:app_mascotas/login/models/dog_model.dart';
 import 'package:app_mascotas/login/models/user_model.dart';
 import 'package:app_mascotas/login/repository/dog_registration_repository.dart';
 import 'package:app_mascotas/login/repository/user_registration_repository.dart';
-import 'package:app_mascotas/login/ui/screens/pet_info_screen.dart';
+import 'package:app_mascotas/login/ui/screens/veterinary_creation_screen.dart';
 import 'package:app_mascotas/theme/colors/dug_colors.dart';
 import 'package:app_mascotas/theme/text/text_size.dart';
 import 'package:app_mascotas/widgets/buttons/principal_button.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:flutter/services.dart';
+import 'package:image/image.dart' as img;
 
 class PetProfileCreationScreen extends StatefulWidget {
   final User user;
@@ -92,13 +94,11 @@ class _PetProfileCreationScreenState extends State<PetProfileCreationScreen> {
               onPressed: () async {
                 final pickedImages = await ImagePicker()
                     .pickMultiImage(); // Abre el selector de imágenes
-                if (pickedImages != null) {
-                  setState(() {
-                    profileImages.addAll(pickedImages.map((image) => image
-                        .path)); // Agrega las rutas de imágenes seleccionadas a la lista
-                  });
-                }
-              },
+                setState(() {
+                  profileImages.addAll(pickedImages.map((image) => image
+                      .path)); // Agrega las rutas de imágenes seleccionadas a la lista
+                });
+                            },
               child: Text('Subir fotos de mascota',
                   style: TextStyle(fontSize: context.text.size.sm)),
             ),
@@ -197,11 +197,31 @@ class _PetProfileCreationScreenState extends State<PetProfileCreationScreen> {
     );
   }
 
-  void onTapProfileButton(BuildContext context) {
+  Future<void> onTapProfileButton(BuildContext context) async {
     String userId = '${widget.user.pais}${widget.user.documento}';
-    Dog dogUpdated =
-        widget.dog.copyWith(personalidad: description, photos: profileImages);
-    dogs.add(dogUpdated);
+    
+    List<String> newProfileImages = [];
+    for (String profileImage  in profileImages) {
+      final File imageFile = File(profileImage);
+      List<int> imageBytes = imageFile.readAsBytesSync();
+
+      img.Image image = img.decodeImage(Uint8List.fromList(imageBytes))!;
+
+      img.Image compressedImage = img.copyResize(image, width: 200);
+
+      List<int> compressedBytes = img.encodePng(compressedImage);
+
+      final String base64Image = base64Encode(compressedBytes);
+      newProfileImages.add(base64Image);
+    }
+
+    Dog dogUpdated =  widget.dog.copyWith(personalidad: description, photos: newProfileImages);
+    
+
+    await dogRegistrationRepository.registerDog(context, dogUpdated);
+
+    dogs.add(await dogRegistrationRepository.getDogById(dogUpdated.id ?? ''));
+
     User userUpdated = widget.user.copyWith(perros: dogs);
 
     userRegistrationRepository.updateUser(
@@ -210,17 +230,15 @@ class _PetProfileCreationScreenState extends State<PetProfileCreationScreen> {
       userUpdated,
     );
 
-    dogRegistrationRepository.registerDog(context, dogUpdated);
-
     widget.logedUserController.user = userUpdated;
 
     if (areAllFieldsFilled()) {
       Navigator.of(context).push(
         MaterialPageRoute(
-          builder: (context) => PrincipalScreen(
-            housingUser: false,
+          builder: (context) => VeterinaryCreationScreen(
             logedUserController: widget.logedUserController,
-          ), // La siguiente pantalla
+            user: widget.logedUserController.user,
+          ), // La siguiente pantalla 
         ),
       );
     } else {

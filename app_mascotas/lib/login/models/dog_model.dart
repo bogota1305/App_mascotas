@@ -1,5 +1,3 @@
-import 'package:app_mascotas/login/models/user_model.dart';
-
 class Dog {
   String? id;
   String nombre;
@@ -39,6 +37,7 @@ class Dog {
 
   Map<String, dynamic> toJson() {
     return {
+      'id': id,
       'nombre': nombre,
       'fechaNacimiento': fechaNacimiento.toIso8601String(),
       'raza': raza,

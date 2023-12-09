@@ -1,20 +1,15 @@
-import 'dart:convert';
 import 'package:app_mascotas/home/controller/map_controller.dart';
 import 'package:app_mascotas/home/controller/request_housing_users_controller.dart';
 import 'package:app_mascotas/home/model/search_model.dart';
 import 'package:app_mascotas/home/repository/search_home_repository.dart';
 import 'package:app_mascotas/home/repository/user_home_repository.dart';
-import 'package:app_mascotas/home/ui/widgets/app_bar_dug.dart';
+import 'package:app_mascotas/login/controller/loged_user_controller.dart';
 import 'package:app_mascotas/login/models/accomodation_model.dart';
 import 'package:app_mascotas/login/models/localization_model.dart';
 import 'package:app_mascotas/login/models/user_model.dart';
 import 'package:app_mascotas/reservation/models/request_controller.dart';
-import 'package:date_format/date_format.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter_date_range_picker/flutter_date_range_picker.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:http/http.dart' as http;
-import 'package:time_range_picker/time_range_picker.dart';
 
 enum SortOrder { ascending, descending }
 
@@ -24,12 +19,14 @@ class UsersListController {
 
   Future<List<User>> getCuidadores(
     RequestsHousingUsersController requestsHousingUsersController,
-    User user,
+    LogedUserController logedUserController,
   ) async {
     List<User> usersData = [];
     List<User> cuidadores = [];
+    List<User> cuidadoresFavoritos = [];
     String distancia = '';
     List<RequestModel> solicitudes = [];
+    User user = logedUserController.user;
     String userId = user.id ?? '${user.pais}${user.documento}';
     final userHomeRepository = UserHomeRepository();
     try {
@@ -41,9 +38,21 @@ class UsersListController {
             distancia = await getDistance(
               cuidador.alojamiento ?? defaultAccommodation(),
             );
+            cuidador = cuidador.copyWith(
+              distancia: distancia,
+            );
+            for (String favorito in user.cuidadoresFavoritos) {
+              if (cuidador.id == favorito) {
+                cuidadoresFavoritos.add(cuidador);
+                cuidador = cuidador.copyWith(
+                  favorite: true,
+                );
+              }
+            }
             if (user.solicitudesCreadas.isNotEmpty) {
               for (RequestModel solicitud in user.solicitudesCreadas) {
-                if (solicitud.idUsuarioSolicitado == cuidador.id && solicitud.idUsuarioSolicitante == userId) {
+                if (solicitud.idUsuarioSolicitado == cuidador.id &&
+                    solicitud.idUsuarioSolicitante == userId) {
                   solicitudes.add(solicitud);
                   requestsHousingUsersController.users.add(
                     cuidador.copyWith(
@@ -53,23 +62,16 @@ class UsersListController {
                   );
                   solicitudes = [];
                 } else {
-                  cuidadores.add(
-                    cuidador.copyWith(
-                      distancia: distancia,
-                    ),
-                  );
+                  cuidadores.add(cuidador);
                 }
               }
             } else {
-              cuidadores.add(
-                cuidador.copyWith(
-                  distancia: distancia,
-                ),
-              );
+              cuidadores.add(cuidador);
             }
           }
         }
       }
+      logedUserController.favoritos = cuidadoresFavoritos;
     } catch (e) {
       print('Error al obtener cuidadores: $e');
     }
@@ -88,9 +90,11 @@ class UsersListController {
       usersData = await userHomeRepository.getUsers();
       for (int i = 0; i < usersData.length; i++) {
         if (usersData[i].tipo == 'Dueno') {
-          idUsuarioSolicitante = usersData[i].id ?? '${usersData[i].pais}${usersData[i].documento}';
+          idUsuarioSolicitante = usersData[i].id ??
+              '${usersData[i].pais}${usersData[i].documento}';
           for (RequestModel solicitud in user.solicitudesRecibidas) {
-            if (solicitud.idUsuarioSolicitado == idUsuarioSolicitado && solicitud.idUsuarioSolicitante == idUsuarioSolicitante) {
+            if (solicitud.idUsuarioSolicitado == idUsuarioSolicitado &&
+                solicitud.idUsuarioSolicitante == idUsuarioSolicitante) {
               solicitudes.add(solicitud);
               duenos
                   .add(usersData[i].copyWith(solicitudesCreadas: solicitudes));
@@ -107,11 +111,12 @@ class UsersListController {
   }
 
   Future<List<User>> getCuidadoresDisponibles(
-      Search search,
-      RequestsHousingUsersController requestsHousingUsersController,
-      User user) async {
-    final cuidadores =
-        await getCuidadores(requestsHousingUsersController, user);
+    Search search,
+    RequestsHousingUsersController requestsHousingUsersController,
+    LogedUserController logedUserController,
+  ) async {
+    final cuidadores = await getCuidadores(
+        requestsHousingUsersController, logedUserController);
 
     final cuidadoresDisponibles = cuidadores.where((cuidador) {
       final alojamiento = cuidador.alojamiento;
@@ -121,7 +126,8 @@ class UsersListController {
       }
 
       if (alojamientoMatchesServiceType(alojamiento, search) &&
-          alojamientoMatchesAvailability(alojamiento, search)) {
+          alojamientoMatchesAvailability(
+              alojamiento, search, cuidador.solicitudesRecibidas)) {
         return true;
       }
       return false;
@@ -135,23 +141,40 @@ class UsersListController {
     return tipoDeServicio == search.tipoDeServicio || tipoDeServicio == 'Ambos';
   }
 
-  bool alojamientoMatchesAvailability(
-      Accommodation alojamiento, Search search) {
+  bool alojamientoMatchesAvailability(Accommodation alojamiento, Search search,
+      List<RequestModel> solicitudesRecibidas) {
+    bool estaDisponible = true;
     if (search.tipoDeServicio == 'Fecha') {
-      final disponibilidad = DateRange(
-        alojamiento.diaInicioDisponibilidad,
-        alojamiento.diaFinDisponibilidad,
-      );
-      return disponibilidad.contains(search.fechaDeInicio) &&
-          disponibilidad.contains(search.fechaDeFin);
+        final disponibilidad = DateRange(
+          alojamiento.diaInicioDisponibilidad,
+          alojamiento.diaFinDisponibilidad,
+        );
+        final busqueda = DateRange(
+          search.fechaDeInicio,
+          search.fechaDeFin,
+        );
+      if (disponibilidad.contains(search.fechaDeInicio) &&
+          disponibilidad.contains(search.fechaDeFin)) {
+        for (RequestModel solicitud in solicitudesRecibidas) {
+          if (solicitud.estado == 'Aceptada' &&
+              (busqueda.contains(solicitud.fechaDeInicio) ||
+                  busqueda.contains(solicitud.fechaDeFin))) {
+            estaDisponible = false;
+          }
+        }
+      } else {
+        estaDisponible = false;
+      }
     }
     if (search.tipoDeServicio == 'Hora') {
       final horaInicioDisponibilidad = alojamiento.horaInicioDisponibilidad;
       final horaFinDisponibilidad = alojamiento.horaFinDisponibilidad;
-      return horaInicioDisponibilidad <= search.horaDeInicio &&
-          horaFinDisponibilidad >= search.horaDeFin;
+      if (!(horaInicioDisponibilidad <= search.horaDeInicio &&
+          horaFinDisponibilidad >= search.horaDeFin)) {
+        estaDisponible = false;
+      }
     }
-    return false;
+    return estaDisponible;
   }
 
   List<User> orderCuidadoresByAttribute(
@@ -241,7 +264,8 @@ class UsersListController {
       final solicitud = dueno.solicitudesCreadas.first;
 
       if (solicitud.estado == 'Creada' &&
-          solicitudMatchesAvailability(solicitud, search)) {
+          (search.tipoDeServicio == 'Ambos' ||
+              solicitudMatchesAvailability(solicitud, search))) {
         return true;
       }
       return false;
@@ -256,16 +280,16 @@ class UsersListController {
   ) {
     if (search.tipoDeServicio == 'Fecha') {
       final disponibilidad = DateRange(
-        solicitud.fechaDeInicio,
-        solicitud.fechaDeFin,
+        search.fechaDeInicio,
+        search.fechaDeFin,
       );
-      return disponibilidad.contains(search.fechaDeInicio) &&
-          disponibilidad.contains(search.fechaDeFin);
+      return disponibilidad.contains(solicitud.fechaDeInicio) &&
+          disponibilidad.contains(solicitud.fechaDeFin);
     }
     if (search.tipoDeServicio == 'Hora') {
       final horaInicio = solicitud.horaDeInicio;
       final horaFin = solicitud.horaDeFin;
-      return horaInicio <= search.horaDeInicio && horaFin >= search.horaDeFin;
+      return horaInicio >= search.horaDeInicio && horaFin <= search.horaDeFin;
     }
     return false;
   }

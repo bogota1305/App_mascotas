@@ -1,5 +1,7 @@
 import 'package:app_mascotas/extensions/dimension_extension.dart';
 import 'package:app_mascotas/extensions/radius_extension.dart';
+import 'package:app_mascotas/home/ui/screens/principal_screen.dart';
+import 'package:app_mascotas/login/controller/loged_user_controller.dart';
 import 'package:app_mascotas/theme/colors/dug_colors.dart';
 import 'package:app_mascotas/theme/text/text_size.dart';
 import 'package:flutter/material.dart';
@@ -7,11 +9,13 @@ import 'package:flutter/material.dart';
 class ReservationErrorAlertDialog extends StatelessWidget {
   final String titulo;
   final String descripcion;
+  final LogedUserController logedUserController;
 
   const ReservationErrorAlertDialog({
     super.key,
     required this.titulo,
-    required this.descripcion,
+    required this.descripcion, 
+    required this.logedUserController,
   });
   @override
   Widget build(BuildContext context) {
@@ -39,9 +43,15 @@ class ReservationErrorAlertDialog extends StatelessWidget {
                   SizedBox(height: 16),
                   ElevatedButton(
                     onPressed: () {
-                      Navigator.of(context).pop();
-                      Navigator.of(context).pop();
-                      Navigator.of(context).pop();
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) => PrincipalScreen(
+                            housingUser:
+                                logedUserController.user.tipo == 'Cuidador',
+                            logedUserController: logedUserController,
+                          ),
+                        ),
+                      );
                     },
                     style: ElevatedButton.styleFrom(
                       primary: DugColors.purple,

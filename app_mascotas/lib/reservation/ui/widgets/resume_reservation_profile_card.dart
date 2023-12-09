@@ -43,10 +43,10 @@ class ResumeReservationProfileCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Container(
-                decoration: BoxDecoration(
-                    color: DugColors.blue, shape: BoxShape.circle),
+                decoration: BoxDecoration(shape: BoxShape.circle),
                 width: 100,
                 height: 100,
+                child: Image.network(user.fotos.first),
               ),
               SizedBox(
                 width: 15,

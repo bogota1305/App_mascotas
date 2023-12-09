@@ -1,6 +1,7 @@
 import 'package:app_mascotas/login/models/accomodation_model.dart';
 import 'package:app_mascotas/login/models/dog_model.dart';
 import 'package:app_mascotas/login/models/rating_model.dart';
+import 'package:app_mascotas/login/models/veterinary_model.dart';
 import 'package:app_mascotas/reservation/models/request_controller.dart';
 
 class User {
@@ -29,10 +30,12 @@ class User {
   //BankAccount cuentaBancaraia;
   List<RequestModel>solicitudesCreadas;
   List<RequestModel>solicitudesRecibidas;
-  //Veterinary clinicaVeterinaria;
+  Veterinary? clinicaVeterinaria;
   //Insurance seguro;
   // List<preferenciasDeRazasAlojar: [];
   // List<perrosNoAlojados: [];
+  List<String> cuidadoresFavoritos;
+  bool? favorite;
 
   User({
     this.id,
@@ -58,10 +61,12 @@ class User {
     this.distancia,
     // required this.metodosDePago,
     // required this.cuentaBancaraia,
-    // required this.clinicaVeterinaria,
+    this.clinicaVeterinaria,
     // required this.seguro,
     required this.solicitudesCreadas,
     required this.solicitudesRecibidas,
+    required this.cuidadoresFavoritos,
+    this.favorite,
     // this.preferenciasDeRazasAlojar,
     // this.perrosNoAlojados,
   });
@@ -90,7 +95,8 @@ class User {
       'solicitudesRecibidas': solicitudesRecibidas.map((request) => request.toJson()).toList(),
       // 'metodosDePago': metodosDePago.map((payment) => payment.toJson()).toList(),
       // 'cuentaBancaria': cuentaBancaria.toJson(),
-      // 'clinicaVeterinaria': clinicaVeterinaria.toJson(),
+      'clinicaVeterinaria': clinicaVeterinaria?.toJson(),
+      'cuidadoresFavoritos' : cuidadoresFavoritos,
       // 'seguro': seguro.toJson(),
     };
   }
@@ -140,6 +146,8 @@ class User {
       calificacionPromedio: promedio, 
       solicitudesCreadas: solicitudesCreadas, 
       solicitudesRecibidas: solicitudesRecibidas, 
+      clinicaVeterinaria: json['clinicaVeterinaria'] != null ? Veterinary.fromJson(json['clinicaVeterinaria']) : null,
+      cuidadoresFavoritos: List<String>.from(json['cuidadoresFavoritos'] ?? []),
     );
   }
 
@@ -169,7 +177,9 @@ class User {
     List<RequestModel>? solicitudesRecibidas,
     // List<PaymentMethod>? metodosDePago,
     // BankAccount? cuentaBancaraia,
-    // Veterinary? clinicaVeterinaria,
+    Veterinary? clinicaVeterinaria,
+    List<String>? cuidadoresFavoritos,
+    bool? favorite,
     // Insurance? seguro,
   }) {
     return User(
@@ -198,7 +208,9 @@ class User {
       solicitudesRecibidas: solicitudesRecibidas ?? this.solicitudesRecibidas,
       // metodosDePago: metodosDePago ?? this.metodosDePago,
       // cuentaBancaraia: cuentaBancaraia ?? this.cuentaBancaraia,
-      // clinicaVeterinaria: clinicaVeterinaria ?? this.clinicaVeterinaria,
+      clinicaVeterinaria: clinicaVeterinaria ?? this.clinicaVeterinaria,
+      cuidadoresFavoritos: cuidadoresFavoritos ?? this.cuidadoresFavoritos,
+      favorite: favorite ?? this.favorite,
       // seguro: seguro ?? this.seguro,
     );
   }

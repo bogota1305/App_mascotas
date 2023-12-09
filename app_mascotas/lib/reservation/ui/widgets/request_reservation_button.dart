@@ -11,7 +11,6 @@ import 'package:app_mascotas/reservation/ui/widgets/reservation_alert_dialog.dar
 import 'package:app_mascotas/reservation/ui/widgets/reservation_error_alert_dialog.dart';
 import 'package:app_mascotas/theme/colors/dug_colors.dart';
 import 'package:app_mascotas/theme/text/text_size.dart';
-import 'package:date_format/date_format.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_date_range_picker/flutter_date_range_picker.dart';
 
@@ -99,6 +98,7 @@ class RequestReservationButton extends StatelessWidget {
           }
 
           RequestModel solicitud = RequestModel(
+            id: '$idSolicitante$idSolicitado',
             estado: 'Creada',
             idUsuarioSolicitante: idSolicitante,
             idUsuarioSolicitado: idSolicitado,
@@ -112,11 +112,14 @@ class RequestReservationButton extends StatelessWidget {
             precio: (price * number),
           );
 
-          for (RequestModel solicitudCreada in logedUserController.user.solicitudesCreadas) {
-            if (solicitudCreada.idUsuarioSolicitado == solicitud.idUsuarioSolicitado) {
+          for (RequestModel solicitudCreada
+              in logedUserController.user.solicitudesCreadas) {
+            if (solicitudCreada.idUsuarioSolicitado ==
+                solicitud.idUsuarioSolicitado) {
               solicitudNueva = false;
               titulo = 'Ya tienes una reserva para este cuidador';
-              descripcion = 'No puedes solicitar mas de una reserva para un mismo cuidador, espera a que sea respondida';
+              descripcion =
+                  'No puedes solicitar mas de una reserva para un mismo cuidador, espera a que sea respondida';
             }
             if (solicitudNueva && solicitudCreada.tipoDeServicio == 'Fecha') {
               solicitudNueva = isOutsideDaysRange(
@@ -126,7 +129,8 @@ class RequestReservationButton extends StatelessWidget {
                 solicitud.fechaDeFin,
               );
               titulo = 'Ya tienes una reserva dentro de estas fechas';
-              descripcion = 'No puedes solicitar mas de una reserva para un mismo rango de fechas, espera a que sea respondida';
+              descripcion =
+                  'No puedes solicitar mas de una reserva para un mismo rango de fechas, espera a que sea respondida';
             }
             if (solicitudNueva && solicitudCreada.tipoDeServicio == 'Hora') {
               solicitudNueva = isOutsideHoursRange(
@@ -138,7 +142,8 @@ class RequestReservationButton extends StatelessWidget {
                 solicitud.horaDeFin,
               );
               titulo = 'Ya tienes una reserva hoy dentro de estas horas';
-              descripcion = 'No puedes solicitar mas de una reserva para un mismo rango de horas, espera a que sea respondida';
+              descripcion =
+                  'No puedes solicitar mas de una reserva para un mismo rango de horas, espera a que sea respondida';
             }
           }
 
@@ -155,12 +160,14 @@ class RequestReservationButton extends StatelessWidget {
               solicitud,
             );
 
-            logedUserController.user = logedUserController.user.copyWith(solicitudesCreadas: solicitudesCreadas);
+            logedUserController.user = logedUserController.user
+                .copyWith(solicitudesCreadas: solicitudesCreadas);
 
             userRegistrationRepository.updateUser(
               context,
               idSolicitante,
-              logedUserController.user.copyWith(solicitudesCreadas: solicitudesCreadas),
+              logedUserController.user
+                  .copyWith(solicitudesCreadas: solicitudesCreadas),
             );
 
             userRegistrationRepository.updateUser(
@@ -179,7 +186,11 @@ class RequestReservationButton extends StatelessWidget {
             showDialog(
               context: context,
               builder: (BuildContext context) {
-                return ReservationErrorAlertDialog(titulo: titulo, descripcion: descripcion,);
+                return ReservationErrorAlertDialog(
+                  titulo: titulo,
+                  descripcion: descripcion,
+                  logedUserController: logedUserController,
+                );
               },
             );
           }
